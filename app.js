@@ -73,7 +73,7 @@ const PAGE_BG_PHOTOS = {
 };
 const GROUP_MATCH_SLOTS = [{day:0,hour:18,minute:0},{day:0,hour:21,minute:0},{day:1,hour:18,minute:0},{day:1,hour:21,minute:0},{day:4,hour:18,minute:0},{day:4,hour:21,minute:0}];
 const KNOCKOUT_SLOTS = {r16:{startDay:18,count:16},r8:{startDay:25,count:8},r4:{startDay:30,count:4},semi:{startDay:34,count:2},third:{startDay:37,count:1},final:{startDay:38,count:1}};
-const SUPER_ADMIN_EMAILS = ['javier.sacramento.castells@gmail.com','sergioredalb@gmail.com','marioutebo05@gmail.com','max.gkh@gmail.com'];
+const SUPER_ADMIN_EMAILS = ['javier.sacramento.castells@gmail.com','sergioredalb@gmail.com','marioutebo05@gmail.com'];
 const GROUP_PAIRINGS = [[0,1],[2,3],[0,2],[3,1],[0,3],[1,2]];
 
 // ── STATE ──────────────────────────────────────────────────
