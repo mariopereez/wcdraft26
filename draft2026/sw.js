@@ -1,0 +1,80 @@
+// ═══════════════════════════════════════════════════════
+//  Draft 2026 — Service Worker
+//  Estrategia: Cache-First para shell estático,
+//  Network-First para Firebase y Football API.
+// ═══════════════════════════════════════════════════════
+
+const CACHE_NAME = 'draft2026-v1';
+
+// Recursos del shell que se cachean en la instalación
+const SHELL_ASSETS = [
+  '/',
+  '/index.html',
+  '/css/main.css',
+  '/js/app.js',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
+];
+
+// ── INSTALL: precachear el shell ──────────────────────
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(SHELL_ASSETS);
+    }).then(() => self.skipWaiting())
+  );
+});
+
+// ── ACTIVATE: limpiar caches viejos ──────────────────
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+// ── FETCH ─────────────────────────────────────────────
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // No interceptar requests de Firebase, Football API, ni Google Fonts
+  if (
+    url.hostname.includes('firestore.googleapis.com') ||
+    url.hostname.includes('firebase') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('api.football-data.org') ||
+    url.hostname.includes('fonts.gstatic.com') ||
+    url.hostname.includes('gstatic.com')
+  ) {
+    return; // dejar pasar sin cachear
+  }
+
+  // Para el shell estático: Cache-First
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(event.request).then((response) => {
+        // Solo cachear respuestas válidas de nuestro propio origen
+        if (
+          response.ok &&
+          url.origin === self.location.origin &&
+          event.request.method === 'GET'
+        ) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => {
+        // Si no hay red y no hay caché, devolver el index para SPAs
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+      });
+    })
+  );
+});

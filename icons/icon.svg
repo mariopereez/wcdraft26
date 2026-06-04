@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fondo -->
+  <rect width="512" height="512" fill="#07090f" rx="80"/>
+  <!-- Glow -->
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#f5c518" stop-opacity="0.15"/>
+    <stop offset="100%" stop-color="#07090f" stop-opacity="0"/>
+  </radialGradient>
+  <rect width="512" height="512" fill="url(#glow)" rx="80"/>
+  <!-- Círculo exterior dorado -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#f5c518" stroke-width="8" opacity="0.8"/>
+  <!-- Círculo interior -->
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#f5c518" stroke-width="3" opacity="0.3"/>
+  <!-- Texto DRAFT -->
+  <text x="256" y="230" font-family="Arial Black, Arial" font-weight="900" font-size="88" fill="#f5c518" text-anchor="middle" letter-spacing="8">DRAFT</text>
+  <!-- Texto 2026 -->
+  <text x="256" y="320" font-family="Arial Black, Arial" font-weight="900" font-size="72" fill="#ffffff" text-anchor="middle" letter-spacing="6" opacity="0.9">2026</text>
+  <!-- Línea decorativa -->
+  <rect x="156" y="335" width="200" height="3" fill="#f5c518" opacity="0.5" rx="2"/>
+  <!-- Balón (hex pattern simplificado) -->
+  <circle cx="256" cy="380" r="28" fill="none" stroke="#f5c518" stroke-width="2" opacity="0.4"/>
+  <circle cx="256" cy="380" r="8" fill="#f5c518" opacity="0.5"/>
+</svg>

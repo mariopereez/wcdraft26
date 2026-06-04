@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset de Base de Datos - Draft 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090f;
+      --surface: #0d1525;
+      --border: rgba(245, 197, 24, 0.2);
+      --gold: #f5c518;
+      --red: #e63946;
+      --white: #eef2ff;
+      --muted: #7a8ba8;
+    }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Barlow Condensed', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      color: var(--gold);
+      margin: 0 0 0.5rem 0;
+      letter-spacing: 3px;
+      font-size: 2rem;
+      text-align: center;
+    }
+    p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0 0 1.5rem 0;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    input {
+      width: 100%;
+      background: rgba(7, 9, 15, 0.6);
+      border: 1px solid rgba(245, 197, 24, 0.15);
+      border-radius: 8px;
+      padding: 0.8rem;
+      color: var(--white);
+      font-size: 1rem;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+    .btn {
+      width: 100%;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 0.9rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: #e0b410;
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      background: var(--muted);
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-danger {
+      background: var(--red);
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #d62839;
+    }
+    .msg {
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      display: none;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .msg.error {
+      background: rgba(230, 57, 70, 0.15);
+      border: 1px solid var(--red);
+      color: #ff6b6b;
+      display: block;
+    }
+    .msg.success {
+      background: rgba(46, 196, 182, 0.15);
+      border: 1px solid #2ec4b6;
+      color: #06d6a0;
+      display: block;
+    }
+    .console {
+      background: #07090f;
+      border: 1px solid rgba(245, 197, 24, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 1.2rem;
+      display: none;
+    }
+    .console-line {
+      margin-bottom: 0.3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+      padding-bottom: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>RESETEAR BASE DE DATOS</h1>
+    <p>Inicia sesión con tu cuenta de Administrador para borrar todos los torneos, códigos y perfiles de Firestore.</p>
+    
+    <div id="auth-section">
+      <div class="form-group">
+        <label>Email de Administrador</label>
+        <input type="email" id="email" placeholder="admin@email.com">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()">
+      </div>
+      <button class="btn" id="login-btn" onclick="handleLogin()">Iniciar Sesión</button>
+    </div>
+
+    <div id="reset-section" style="display: none;">
+      <div style="background: rgba(230, 57, 70, 0.1); border: 1px solid var(--red); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.5;">
+        <span style="color: #ff6b6b; font-weight: bold; display: block; margin-bottom: 0.3rem; font-size: 0.95rem;">⚠️ ATENCIÓN</span>
+        Esta acción borrará de Firestore de forma irreversible todas las partidas, códigos y usuarios registrados. Las imágenes de perfil en almacenamiento no serán afectadas.
+      </div>
+      <button class="btn btn-danger" id="reset-btn" onclick="confirmAndReset()">BORRAR TODO DE FIRESTORE</button>
+    </div>
+
+    <div class="msg" id="message"></div>
+    <div class="console" id="console"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADzpGAn0MDaV5e9o5rsSn16NsJSded1q8",
+      authDomain: "mundial-draft-2026-688a4.firebaseapp.com",
+      projectId: "mundial-draft-2026-688a4",
+      storageBucket: "mundial-draft-2026-688a4.firebasestorage.app",
+      messagingSenderId: "234505318593",
+      appId: "1:234505318593:web:91c4b577647a2362ab6440"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.handleLogin = async () => {
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('password').value;
+      const msg = document.getElementById('message');
+      const loginBtn = document.getElementById('login-btn');
+      
+      if (!email || !pass) {
+        msg.className = "msg error";
+        msg.textContent = "Ingresa tu email y contraseña";
+        return;
+      }
+      
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Conectando...";
+      msg.style.display = "none";
+      
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, email, pass);
+        // Validar si es uno de los super admins definidos en el app.js original
+        const superAdmins = ['javier.sacramento.castells@gmail.com', 'sergioredalb@gmail.com', 'marioutebo05@gmail.com'];
+        if (!superAdmins.includes(userCred.user.email)) {
+          throw new Error("No tienes privilegios de Super Administrador para ejecutar esta acción.");
+        }
+        
+        document.getElementById('auth-section').style.display = "none";
+        document.getElementById('reset-section').style.display = "block";
+        msg.className = "msg success";
+        msg.textContent = `Sesión iniciada como: ${userCred.user.email}`;
+      } catch (e) {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Iniciar Sesión";
+        msg.className = "msg error";
+        msg.textContent = "Error: " + e.message;
+      }
+    };
+
+    window.confirmAndReset = async () => {
+      if (!confirm("¿Estás seguro al 100% de borrar TODA la base de datos de Firestore?\nEsta acción NO se puede deshacer y eliminará torneos, selecciones, perfiles y predicciones.")) {
+        return;
+      }
+      
+      const btn = document.getElementById('reset-btn');
+      const consoleEl = document.getElementById('console');
+      const msg = document.getElementById('message');
+      
+      btn.disabled = true;
+      btn.textContent = "BORRANDO...";
+      consoleEl.style.display = "block";
+      consoleEl.innerHTML = "";
+      msg.style.display = "none";
+
+      const log = (text) => {
+        const line = document.createElement('div');
+        line.className = "console-line";
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        consoleEl.appendChild(line);
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+      };
+
+      try {
+        // 1. Borrar CÓDIGOS
+        log("Obteniendo códigos de invitación...");
+        const codigosSnap = await getDocs(collection(db, "codigos"));
+        log(`Se encontraron ${codigosSnap.size} códigos.`);
+        let deletedCodigos = 0;
+        for (const docSnap of codigosSnap.docs) {
+          await deleteDoc(doc(db, "codigos", docSnap.id));
+          deletedCodigos++;
+          if (deletedCodigos % 5 === 0 || deletedCodigos === codigosSnap.size) {
+            log(`Códigos eliminados: ${deletedCodigos}/${codigosSnap.size}`);
+          }
+        }
+
+        // 2. Borrar PARTIDAS
+        log("Obteniendo partidas / torneos...");
+        const partidasSnap = await getDocs(collection(db, "partidas"));
+        log(`Se encontraron ${partidasSnap.size} partidas.`);
+        let deletedPartidas = 0;
+        for (const docSnap of partidasSnap.docs) {
+          const pid = docSnap.id;
+          log(`Borrando subdocumentos de partida: ${pid}`);
+          
+          const subdocs = ['config/data', 'draft/data', 'results/data', 'draftState/data', 'predictions/data', 'avatars/data'];
+          for (const path of subdocs) {
+            try {
+              await deleteDoc(doc(db, `partidas/${pid}/${path}`));
+            } catch (err) {}
+          }
+          
+          const jugadoresSnap = await getDocs(collection(db, `partidas/${pid}/jugadores`));
+          for (const jSnap of jugadoresSnap.docs) {
+            await deleteDoc(doc(db, `partidas/${pid}/jugadores/${jSnap.id}`));
+          }
+          
+          await deleteDoc(doc(db, "partidas", pid));
+          deletedPartidas++;
+          log(`Partida eliminada (${pid}). Total: ${deletedPartidas}/${partidasSnap.size}`);
+        }
+
+        // 3. Borrar USUARIOS (Firestore perfiles)
+        log("Obteniendo perfiles de usuarios de Firestore...");
+        const usuariosSnap = await getDocs(collection(db, "usuarios"));
+        log(`Se encontraron ${usuariosSnap.size} perfiles.`);
+        let deletedUsuarios = 0;
+        for (const docSnap of usuariosSnap.docs) {
+          await deleteDoc(doc(db, "usuarios", docSnap.id));
+          deletedUsuarios++;
+          if (deletedUsuarios % 5 === 0 || deletedUsuarios === usuariosSnap.size) {
+            log(`Perfiles eliminados: ${deletedUsuarios}/${usuariosSnap.size}`);
+          }
+        }
+
+        log("🎉 ¡Limpieza de Firestore finalizada!");
+        msg.className = "msg success";
+        msg.textContent = "Firestore restablecido con éxito. Todos los datos de torneos y perfiles han sido eliminados.";
+        btn.textContent = "Restablecido";
+      } catch (e) {
+        log(`❌ Error: ${e.message}`);
+        msg.className = "msg error";
+        msg.textContent = "Hubo un error durante la limpieza: " + e.message;
+        btn.disabled = false;
+        btn.textContent = "BORRAR TODO DE FIRESTORE";
+      }
+    };
+  </script>
+</body>
+</html>
