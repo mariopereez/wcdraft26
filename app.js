@@ -701,11 +701,13 @@ async function loadSala(partidaId) {
 function renderSala() {
   try {
     if(!currentPartidaConfig) return;
+    if(!currentUser) return;
     const cfg = currentPartidaConfig;
-    const el = document.getElementById('sala-nombre');         if(el) el.textContent = cfg.nombre;
-    const cEl= document.getElementById('sala-codigo-txt');     if(cEl) cEl.textContent = cfg.codigo;
-    const jugadores = Object.values(currentPartidaJugadores);
-    const list   = document.getElementById('sala-jugadores-list');
+    const maxJ = cfg.maxJugadores || 2;
+    const el = document.getElementById('sala-nombre'); if(el) el.textContent = cfg.nombre || '';
+    const cEl= document.getElementById('sala-codigo-txt'); if(cEl) cEl.textContent = cfg.codigo || '';
+    const jugadores = Object.values(currentPartidaJugadores || {});
+    const list = document.getElementById('sala-jugadores-list');
     if(list) {
       list.innerHTML = jugadores.map(j => {
         const isMe = j.uid === currentUser.uid;
@@ -714,31 +716,35 @@ function renderSala() {
         const badgeText = isOwner ? 'Admin' : 'Jugador';
         return `<div class="sala-jugador-circle-wrap">
           <div class="sala-jugador-circle-avatar">
-            ${avatarEl(j.displayName, '', 48)}
+            ${avatarEl(j.displayName || '?', '', 48)}
             <span class="sala-jugador-circle-badge ${badgeClass}">${badgeText}</span>
           </div>
-          <div class="sala-jugador-circle-name ${isMe?'is-me':''}">${j.displayName}</div>
+          <div class="sala-jugador-circle-name ${isMe ? 'is-me' : ''}">${j.displayName || '?'}</div>
         </div>`;
       }).join('');
     }
-    
     // Update progress bar
-    const pct = Math.min(100, Math.max(0, (jugadores.length / cfg.maxJugadores) * 100));
+    const pct = Math.min(100, Math.max(0, (jugadores.length / maxJ) * 100));
     const barFill = document.getElementById('supercell-bar-fill');
     if(barFill) barFill.style.width = `${pct}%`;
     const barText = document.getElementById('supercell-bar-text');
     if(barText) {
-      if(jugadores.length >= cfg.maxJugadores) {
-        barText.textContent = `¡SALA COMPLETA! (${jugadores.length}/${cfg.maxJugadores})`;
+      barText.textContent = jugadores.length >= maxJ
+        ? `¡SALA COMPLETA! (${jugadores.length}/${maxJ})`
+        : `BUSCANDO JUGADORES (${jugadores.length}/${maxJ})`;
+    }
+    const adminArea = document.getElementById('sala-admin-actions');
+    if(adminArea) {
+      if(isAdmin()) {
+        adminArea.style.display = 'flex';
+        const startBtn = document.getElementById('sala-start-btn');
+        if(startBtn) startBtn.disabled = jugadores.length < 2;
       } else {
-        barText.textContent = `BUSCANDO JUGADORES (${jugadores.length}/${cfg.maxJugadores})`;
+        adminArea.style.display = 'none';
       }
     }
-    
-    const adminArea = document.getElementById('sala-admin-actions');
-    if(adminArea) { if(isAdmin()) { adminArea.style.display='flex'; const startBtn=document.getElementById('sala-start-btn'); if(startBtn) startBtn.disabled=jugadores.length<2; } else adminArea.style.display='none'; }
   } catch (err) {
-    console.error("Error in renderSala():", err);
+    console.error('Error in renderSala():', err);
   }
 }
 async function copyCodigo() {
@@ -1127,51 +1133,34 @@ function shuffleArray(arr) {
   return a;
 }
 
-function syncDraftStateFromPicks() {
-  const ds = draftState;
-  if (ds && ds.orders && ds.orders.length > 0) {
-    const totalPicks = Object.values(draft).flat().filter(Boolean).length;
-    ds.currentPick = Math.min(ds.orders.length, totalPicks);
-    if (totalPicks >= ds.orders.length) {
-      if (ds.phase !== 'complete') {
-        ds.phase = 'complete';
-        if (isAdmin() && currentPartidaId && !window._demoMode) {
-          window._updateDoc(window._doc(window._db, 'partidas', currentPartidaId, 'draftState', 'data'), { phase: 'complete' }).catch(() => {});
-        }
-      }
-    }
-  }
-}
+// syncDraftStateFromPicks() removed – currentPick is now the single
+// source of truth from Firestore, advanced atomically in confirmDraftPick().
 
 async function startDraft() {
   if(!isAdmin()) return;
-  const sels=currentPartidaConfig.seleccionesPorJugador;
-  const orders=[];
-  let cur = [];
-  for(let r=0;r<sels;r++){
-    if(r%2===0) {
-      cur = shuffleArray(PARTICIPANTES);
+  const sels = currentPartidaConfig.seleccionesPorJugador;
+  const orders = [];
+  // Snake draft: even rounds = new random shuffle; odd rounds = reverse of previous shuffle.
+  let lastShuffle = [];
+  for(let r = 0; r < sels; r++) {
+    let cur;
+    if(r % 2 === 0) {
+      lastShuffle = shuffleArray([...PARTICIPANTES]);
+      cur = [...lastShuffle];
     } else {
-      cur = [...cur].reverse();
+      cur = [...lastShuffle].reverse();
     }
-    cur.forEach(p=>orders.push({player:p,round:r}));
+    cur.forEach(p => orders.push({ player: p, round: r }));
   }
-  
   const emptyDraft = {};
-  PARTICIPANTES.forEach(p => {
-    emptyDraft[p] = Array(sels).fill('');
-  });
+  PARTICIPANTES.forEach(p => { emptyDraft[p] = Array(sels).fill(''); });
   draft = emptyDraft;
-  
-  const ns={phase:'active',orders,currentPick:0};
-  draftState=ns;
-  
+  const ns = { phase: 'active', orders, currentPick: 0 };
+  draftState = ns;
   try {
     const batch = window._writeBatch(window._db);
-    const draftRef = window._doc(window._db, 'partidas', currentPartidaId, 'draft', 'data');
-    const stateRef = window._doc(window._db, 'partidas', currentPartidaId, 'draftState', 'data');
-    batch.set(draftRef, draft);
-    batch.set(stateRef, ns);
+    batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draft', 'data'), draft);
+    batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draftState', 'data'), ns);
     await batch.commit();
   } catch(e) {
     console.error('Error starting draft:', e);
@@ -1190,7 +1179,6 @@ async function randomAssignAll() {
 function toggleTestMode() { draftTestMode=!draftTestMode; draftTestPlayer=null; renderDraft(); }
 function renderDraft() {
   if(!currentPartidaConfig) return;
-  syncDraftStateFromPicks();
   const ds=draftState; const myName=getCurrentPlayerName(); const sels=currentPartidaConfig.seleccionesPorJugador;
   const adminArea=document.getElementById('draft-admin-area');
   if(isAdmin()){const total=PARTICIPANTES.length*sels;const phaseTxt=ds.phase==='pending'?'Draft no iniciado':ds.phase==='active'?`Pick ${ds.currentPick+1}/${total}`:'Completado';adminArea.innerHTML=`<div class="draft-admin-bar"><span class="draft-status-txt">⚙️ Admin · ${phaseTxt}</span><div style="display:flex;gap:.4rem;flex-wrap:wrap">${ds.phase==='pending'?`<button class="btn btn-gold btn-sm" onclick="startDraft()">🎲 Iniciar draft</button>`:`<button class="btn btn-outline btn-sm" onclick="resetDraft()">🔄 Reiniciar</button>`}<button class="btn btn-outline btn-sm" onclick="randomAssignAll()">🎲 Aleatorio</button><button class="btn ${draftTestMode?'btn-warn':'btn-outline'} btn-sm" onclick="toggleTestMode()">🧪 ${draftTestMode?'Salir test':'Test'}</button></div></div>`;}
@@ -1237,41 +1225,57 @@ function draftSearchFilter(val) { const picked=getPickedTeams();const filtered=A
 function selectDraftTeam(team) { draftSearchSel=team;const inp=document.getElementById('draft-search-inp');if(inp)inp.value=team;const list=document.getElementById('draft-ac-list');if(list)list.innerHTML='';const sd=document.getElementById('draft-selected-team');if(sd)sd.innerHTML=`${flagImg(team,'md')} ${team}`;const btn=document.getElementById('draft-confirm-btn');if(btn)btn.disabled=false; }
 let _draftConfirming=false;
 async function confirmDraftPick() {
-  // ── FIX BUG 3: evitar doble-click ──
-  if(_draftConfirming||!draftSearchSel)return;
-  syncDraftStateFromPicks();
-  const ds=draftState;
-  
-  // Prevent duplicate confirmation of the same turn
-  if(ds.currentPick < lastConfirmedPickIndex) {
-    lastConfirmedPickIndex = -1;
-  }
-  if(ds.currentPick === lastConfirmedPickIndex) {
-    console.warn("Pick already confirmed for index:", ds.currentPick);
+  if(_draftConfirming || !draftSearchSel) return;
+  const ds = draftState;
+  if(!ds || ds.phase !== 'active') return;
+
+  const cp = ds.orders[ds.currentPick];
+  if(!cp) return;
+  const myName = getCurrentPlayerName();
+  if(!isSamePlayer(cp.player, myName)) return;
+
+  const picked = getPickedTeams();
+  if(picked.has(draftSearchSel)) {
+    alert('Selección ya elegida. Elige otra.');
+    draftSearchSel = null;
+    renderDraft();
     return;
   }
-  
-  const cp=ds.orders[ds.currentPick]; const myName=getCurrentPlayerName();
-  if(!cp)return;
-  if(!isSamePlayer(cp.player, myName))return;
-  const picked=getPickedTeams(); if(picked.has(draftSearchSel)){alert('Selección ya elegida. Elige otra.');draftSearchSel=null;renderDraft();return;}
-  
-  _draftConfirming=true;
-  lastConfirmedPickIndex = ds.currentPick;
-  const btn=document.getElementById('draft-confirm-btn'); if(btn){btn.disabled=true;btn.textContent='Guardando…';}
-  
-  // ── FIX BUG 2: usar findMyDraftKey para acceder al objeto draft con el key correcto ──
-  const draftKey=findMyDraftKey(myName);
-  if(!draft[draftKey]) draft[draftKey]=Array(currentPartidaConfig.seleccionesPorJugador).fill('');
-  draft[draftKey][cp.round]=draftSearchSel; draftSearchSel=null;
-  
+
+  _draftConfirming = true;
+  const btn = document.getElementById('draft-confirm-btn');
+  if(btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+  // Apply pick locally
+  const draftKey = findMyDraftKey(myName);
+  if(!draft[draftKey]) draft[draftKey] = Array(currentPartidaConfig.seleccionesPorJugador).fill('');
+  draft[draftKey][cp.round] = draftSearchSel;
+  draftSearchSel = null;
+
+  // Compute next state
+  const nextPick = ds.currentPick + 1;
+  const nextPhase = nextPick >= ds.orders.length ? 'complete' : 'active';
+  const nextState = { ...ds, currentPick: nextPick, phase: nextPhase };
+
+  // Apply locally so UI reacts immediately
+  draftState = nextState;
+
   try {
-    await pushDraft();
+    if(!window._demoMode && currentPartidaId) {
+      // ATOMIC: save pick + advance currentPick in one batch — eliminates stuck-turn race condition
+      const batch = window._writeBatch(window._db);
+      batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draft', 'data'), draft);
+      batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draftState', 'data'), nextState);
+      await batch.commit();
+    }
   } catch(e) {
     console.error('Error guardando pick:', e);
-    lastConfirmedPickIndex = -1; // Reset to allow retry on failure
+    // Rollback on failure so the player can retry
+    draftState = ds;
+    draft[draftKey][cp.round] = '';
+  } finally {
+    _draftConfirming = false;
   }
-  _draftConfirming=false;
   renderDraft();
 }
 function renderPicksLog() {
@@ -1285,7 +1289,6 @@ function renderPicksLog() {
 }
 function showDraftTimeline() {
   const wrap=document.getElementById('draft-timeline-wrap'),cont=document.getElementById('draft-timeline-content');if(!wrap||!cont)return;
-  syncDraftStateFromPicks();
   const ds=draftState; const myName=getCurrentPlayerName();
   if(!ds.orders||ds.currentPick===0){cont.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>Draft no iniciado</p></div>';wrap.style.display='block';return;}
   const done=ds.orders.slice(0,ds.currentPick); let lastRound=-1;
