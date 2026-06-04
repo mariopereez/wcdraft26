@@ -364,6 +364,17 @@ window._onAuthReady = function(user, profile) {
     return;
   }
 
+  const joinCode = urlParams.get('join');
+  if(joinCode) {
+    showScreen('lobby');
+    loadLobby().then(() => {
+      showJoinPartida();
+      const jc = document.getElementById('join-codigo');
+      if(jc) jc.value = joinCode;
+    });
+    return;
+  }
+
   // Si el displayName parece un email (sin apodo configurado), pedir apodo una vez
   if(profile && profile.displayName && profile.displayName.includes('@') && !localStorage.getItem('apodo_set_'+user.uid)) {
     showScreen('lobby');
@@ -611,7 +622,7 @@ async function doCreatePartida() {
   try {
     const codigo    = genCodigo();
     const partidaId = 'p_'+currentUser.uid.slice(0,8)+'_'+Date.now();
-    const config    = { nombre, maxJugadores:maxJ, seleccionesPorJugador:sels, adminUid:currentUser.uid, adminName:currentProfile.displayName, estado:'esperando', codigo, createdAt:Date.now(), jugadoresCount:1 };
+    const config    = { nombre, maxJugadores:maxJ, seleccionesPorJugador:sels, adminUid:currentUser.uid, adminName:currentProfile.displayName, estado:'activa', codigo, createdAt:Date.now(), jugadoresCount:1 };
     await window._setDoc(window._doc(window._db,'partidas',partidaId,'config','data'), config);
     await window._setDoc(window._doc(window._db,'partidas',partidaId,'draft','data'), {[currentProfile.displayName]:Array(sels).fill('')});
     const emptyResults = {};
@@ -643,7 +654,9 @@ async function doJoinPartida() {
       await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid), {partidas:{[partidaId]:{rol:config.adminUid===currentUser.uid?'admin':'jugador',nombre:config.nombre}}},{merge:true});
       btn.disabled=false; btn.textContent='Unirse al torneo'; enterPartida(partidaId); return;
     }
-    if(config.estado !== 'esperando') { showMsg('join-msg','warn','Este torneo ya está en curso.'); btn.disabled=false; btn.textContent='Unirse al torneo'; return; }
+    if(config.estado === 'eliminada' || config.estado === 'completada') { showMsg('join-msg','warn','Este torneo ya no admite nuevos jugadores.'); btn.disabled=false; btn.textContent='Unirse al torneo'; return; }
+    const dsSnap = await window._getDoc(window._doc(window._db,'partidas',partidaId,'draftState','data'));
+    if(dsSnap.exists() && dsSnap.data().phase !== 'pending') { showMsg('join-msg','warn','El draft ya ha comenzado, no puedes unirte.'); btn.disabled=false; btn.textContent='Unirse al torneo'; return; }
     if(config.jugadoresCount >= config.maxJugadores) { showMsg('join-msg','error','El torneo está lleno.'); btn.disabled=false; btn.textContent='Unirse al torneo'; return; }
     btn.textContent = 'Uniéndose…';
     await window._setDoc(window._doc(window._db,'partidas',partidaId,'jugadores',currentUser.uid), {displayName:currentProfile.displayName, joinedAt:Date.now(), uid:currentUser.uid});
@@ -751,6 +764,15 @@ async function copyCodigo() {
   const codigo = currentPartidaConfig?.codigo||'';
   try { await navigator.clipboard.writeText(codigo); alert(`¡Código copiado! Compártelo: ${codigo}`); }
   catch(e) { alert(`Código de invitación: ${codigo}`); }
+}
+async function sharePartida(codigo) {
+  const url = window.location.origin + window.location.pathname + '?join=' + codigo;
+  const text = `¡Únete a mi Mundial Draft 2026! Código: ${codigo}\nEnlace: ${url}`;
+  if(navigator.share) {
+    try { await navigator.share({title:'Mundial Draft 2026', text}); return; } catch(e){}
+  }
+  try { await navigator.clipboard.writeText(text); alert('¡Enlace copiado al portapapeles!'); }
+  catch(e) { alert(`Comparte este enlace:\n${url}`); }
 }
 async function doStartDraft() { if(!isAdmin()||!currentPartidaId) return; await window._updateDoc(window._doc(window._db,'partidas',currentPartidaId,'config','data'),{estado:'activa'}); }
 async function doDeletePartida() {
@@ -1197,7 +1219,19 @@ function renderDraft() {
     document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel"><div class="draft-pick-label">🧪 Modo prueba</div><div style="width:100%"><div style="font-family:'Barlow Condensed';font-size:.7rem;color:var(--muted);text-transform:uppercase;margin-bottom:.45rem">1. Elige participante:</div><div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem">${PARTICIPANTES.map(p=>`<button onclick="setTestPlayer('${p}')" style="display:flex;align-items:center;gap:.25rem;padding:.25rem .55rem;border-radius:20px;font-family:'Barlow Condensed';font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid ${draftTestPlayer===p?'var(--gold)':'var(--border)'};background:${draftTestPlayer===p?'rgba(245,197,24,.12)':'var(--surf2)'};color:${draftTestPlayer===p?'var(--gold)':'var(--white)'}">${avatarEl(p,'',16)} ${p} (${(draft[p]||[]).filter(Boolean).length}/${sels})</button>`).join('')}</div>${draftTestPlayer?`<div id="draft-selected-team" style="font-family:'Bebas Neue';font-size:1rem;color:var(--gold);min-height:1.3rem;margin:.3rem 0"></div><button class="draft-confirm-btn" id="draft-confirm-btn" onclick="confirmTestPick()" disabled>Asignar</button>`:`<div style="font-size:.8rem;color:var(--muted2);font-family:Barlow Condensed">← Elige participante primero</div>`}</div></div>`;
     renderPicksLog(); return;
   }
-  if(ds.phase==='pending'){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">⚽</div><div class="draft-pick-name" style="font-size:1.6rem">Draft pendiente</div><div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?'Inicia el draft cuando todos estén listos':'Esperando al admin…'}</div></div>`;document.getElementById('draft-picks-log').innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">Sin elecciones aún</div>';return;}
+  if(ds.phase==='pending'){
+    document.getElementById('draft-order-area').innerHTML='';
+    const btnShare = `<button class="btn btn-outline" style="margin-top:1rem;font-family:'Barlow Condensed';font-weight:700" onclick="sharePartida('${currentPartidaConfig.codigo}')">📤 Compartir enlace de invitación</button>`;
+    document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center">
+      <div style="font-size:2.5rem">⚽</div>
+      <div class="draft-pick-name" style="font-size:1.6rem">Draft pendiente</div>
+      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed;margin-bottom:.5rem">Código: <strong style="color:var(--gold);font-size:1.1rem">${currentPartidaConfig.codigo}</strong> · (${PARTICIPANTES.length}/${currentPartidaConfig.maxJugadores} jug.)</div>
+      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?'Inicia el draft cuando todos estén listos':'Esperando al admin…'}</div>
+      ${isAdmin() ? btnShare : ''}
+    </div>`;
+    document.getElementById('draft-picks-log').innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">Sin elecciones aún</div>';
+    return;
+  }
   if(ds.phase==='complete'||ds.currentPick>=(ds.orders?.length||0)){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">🏆</div><div class="draft-pick-name">¡DRAFT COMPLETADO!</div></div>`;renderPicksLog();return;}
   const pickIdx=ds.currentPick,cp=ds.orders[pickIdx];
   const isMyTurn=cp&&isSamePlayer(cp.player, myName); const rondaIdx=cp?cp.round:0;
