@@ -592,7 +592,7 @@ async function loadMisPartidas() {
       } catch(e) { return null; }
     }));
     if(staleIds.length > 0) {
-      try { const cleaned = {...misPartidas}; staleIds.forEach(id => delete cleaned[id]); await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid), {partidas:cleaned}, {merge:false}); } catch(e) {}
+      try { const cleaned = {...misPartidas}; staleIds.forEach(id => delete cleaned[id]); await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid), {partidas:cleaned}, {merge:true}); } catch(e) {}
     }
     const valid = rows.filter(Boolean).sort((a,b) => (b.config.createdAt||0)-(a.config.createdAt||0));
     if(valid.length === 0) { list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-family:Barlow Condensed;font-size:.85rem">No tienes torneos activos.<br>¡Crea uno o únete con un código!</div>'; return; }
@@ -671,14 +671,14 @@ async function enterPartida(partidaId) {
   currentPartidaId = partidaId;
   const blacklist = JSON.parse(localStorage.getItem('deleted_partidas')||'[]');
   if(blacklist.includes(partidaId)) {
-    try { const uSnap = await window._getDoc(window._doc(window._db,'usuarios',currentUser.uid)); if(uSnap.exists()) { const mp={...(uSnap.data().partidas||{})}; delete mp[partidaId]; await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid),{partidas:mp},{merge:false}); } } catch(e) {}
+    try { const uSnap = await window._getDoc(window._doc(window._db,'usuarios',currentUser.uid)); if(uSnap.exists()) { const mp={...(uSnap.data().partidas||{})}; delete mp[partidaId]; await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid),{partidas:mp},{merge:true}); } } catch(e) {}
     currentPartidaId = null; await loadLobby(); return;
   }
   try {
     const cfg = await window._getDoc(window._doc(window._db,'partidas',partidaId,'config','data'));
     if(!cfg.exists()||cfg.data().estado==='eliminada') {
       const bl = JSON.parse(localStorage.getItem('deleted_partidas')||'[]'); if(!bl.includes(partidaId)){bl.push(partidaId);localStorage.setItem('deleted_partidas',JSON.stringify(bl));}
-      try { const uSnap=await window._getDoc(window._doc(window._db,'usuarios',currentUser.uid)); if(uSnap.exists()){const mp={...(uSnap.data().partidas||{})};delete mp[partidaId];await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid),{partidas:mp},{merge:false});} } catch(e) {}
+      try { const uSnap=await window._getDoc(window._doc(window._db,'usuarios',currentUser.uid)); if(uSnap.exists()){const mp={...(uSnap.data().partidas||{})};delete mp[partidaId];await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid),{partidas:mp},{merge:true});} } catch(e) {}
       currentPartidaId = null; await loadLobby(); return;
     }
   } catch(e) {}
@@ -783,7 +783,7 @@ async function doDeletePartida() {
     await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'config','data'),{estado:'eliminada'},{merge:true});
     const bl=JSON.parse(localStorage.getItem('deleted_partidas')||'[]'); if(!bl.includes(currentPartidaId)){bl.push(currentPartidaId);localStorage.setItem('deleted_partidas',JSON.stringify(bl));}
     const codigo=currentPartidaConfig?.codigo; if(codigo){try{await window._deleteDoc(window._doc(window._db,'codigos',codigo));}catch(e2){}}
-    try { const uSnap=await window._getDoc(window._doc(window._db,'usuarios',currentUser.uid)); if(uSnap.exists()){const mp={...(uSnap.data().partidas||{})};delete mp[currentPartidaId];await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid),{partidas:mp},{merge:false});} } catch(e3) {}
+    try { const uSnap=await window._getDoc(window._doc(window._db,'usuarios',currentUser.uid)); if(uSnap.exists()){const mp={...(uSnap.data().partidas||{})};delete mp[currentPartidaId];await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid),{partidas:mp},{merge:true});} } catch(e3) {}
     goBackToLobby();
   } catch(e) { if(delBtn){delBtn.disabled=false;delBtn.textContent='🗑️ Eliminar torneo';} alert('Error al eliminar: '+e.message); }
 }

@@ -70,22 +70,37 @@
           const cached=localStorage.getItem(cacheKey);
           if(cached) {
             const profile=JSON.parse(cached);
-            window._authUser=user; window._authProfile=profile;
-            if(window._onAuthReady) window._onAuthReady(user,profile);
-            getDoc(doc(db,'usuarios',user.uid)).then(snap=>{
-              if(snap.exists()){localStorage.setItem(cacheKey,JSON.stringify(snap.data()));window._authProfile=snap.data();}
-            }).catch(()=>{});
-            return;
+            if (profile && profile.displayName) {
+              window._authUser=user; window._authProfile=profile;
+              if(window._onAuthReady) window._onAuthReady(user,profile);
+              getDoc(doc(db,'usuarios',user.uid)).then(snap=>{
+                if(snap.exists() && snap.data().displayName){
+                  localStorage.setItem(cacheKey,JSON.stringify(snap.data()));
+                  window._authProfile=snap.data();
+                } else if (snap.exists()) {
+                  const name=user.displayName||user.email.split('@')[0];
+                  const profileData={...snap.data(), displayName:name,email:user.email};
+                  setDoc(doc(db,'usuarios',user.uid),profileData).then(() => {
+                    localStorage.setItem(cacheKey,JSON.stringify(profileData));
+                    window._authProfile=profileData;
+                  });
+                }
+              }).catch(()=>{});
+              return;
+            } else {
+              localStorage.removeItem(cacheKey);
+            }
           }
           const snap=await getDoc(doc(db,'usuarios',user.uid));
-          if(snap.exists()){
+          if(snap.exists() && snap.data().displayName){
             const profile=snap.data();
             localStorage.setItem(cacheKey,JSON.stringify(profile));
             window._authUser=user; window._authProfile=profile;
             if(window._onAuthReady) window._onAuthReady(user,profile);
           } else {
             const name=user.displayName||user.email.split('@')[0];
-            const profile={displayName:name,email:user.email,createdAt:Date.now()};
+            const existingData=snap.exists() ? snap.data() : {};
+            const profile={...existingData, displayName:name,email:user.email,createdAt:existingData.createdAt||Date.now()};
             await setDoc(doc(db,'usuarios',user.uid),profile);
             localStorage.setItem(cacheKey,JSON.stringify(profile));
             window._authUser=user; window._authProfile=profile;
@@ -559,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </main>
 
-<script src="/app.js?v=2"></script>
+<script src="/app.js?v=3"></script>
 <script>
   // Registrar Service Worker para PWA
   if ('serviceWorker' in navigator) {
