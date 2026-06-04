@@ -796,8 +796,10 @@ async function enterApp(partidaId) {
     currentPartidaJugadores = {}; jugSnap.forEach(d=>{currentPartidaJugadores[d.id]=d.data();});
     rebuildParticipantes();
     const draftSnap = await window._getDoc(window._doc(window._db,'partidas',partidaId,'draft','data'));
-    draft = {}; PARTICIPANTES.forEach(n=>{draft[n]=Array(currentPartidaConfig.seleccionesPorJugador).fill('');});
-    if(draftSnap.exists()){const d=draftSnap.data();PARTICIPANTES.forEach(n=>{if(d[n])draft[n]=d[n];});}
+    draft = draftSnap.exists() ? draftSnap.data() : {};
+    PARTICIPANTES.forEach(n => {
+      if(!draft[n]) draft[n] = Array(currentPartidaConfig.seleccionesPorJugador).fill('');
+    });
     const resSnap = await window._getDoc(window._doc(window._db,'partidas',partidaId,'results','data'));
     results = {}; ALL_TEAMS.forEach(t=>{results[t]={pg:0,pe:0,pd:0,r16:0,r8:0,r4:0,semi:0,final:0,ganador:0,bronce:0};});
     if(resSnap.exists()){const d=resSnap.data();ALL_TEAMS.forEach(t=>{if(d[t])results[t]={...results[t],...d[t]};});}
@@ -839,7 +841,7 @@ function rebuildParticipantes() {
   MULTS = ALL_MULTS_CONFIG[currentPartidaConfig.seleccionesPorJugador] || ALL_MULTS_CONFIG[6];
 }
 function setupPartidaListeners(partidaId) {
-  const u1=window._onSnapshot(window._doc(window._db,'partidas',partidaId,'draft','data'),s=>{if(s.exists()){const d=s.data();PARTICIPANTES.forEach(n=>{if(d[n])draft[n]=d[n];});refreshCurrentPage();}});
+  const u1=window._onSnapshot(window._doc(window._db,'partidas',partidaId,'draft','data'),s=>{if(s.exists()){draft=s.data()||{};refreshCurrentPage();}});
   const u2=window._onSnapshot(window._doc(window._db,'partidas',partidaId,'results','data'),s=>{if(s.exists()){const d=s.data();ALL_TEAMS.forEach(t=>{if(d[t])results[t]={...results[t],...d[t]};});refreshCurrentPage();}});
   const u3=window._onSnapshot(window._doc(window._db,'partidas',partidaId,'draftState','data'),s=>{if(s.exists()){draftState={...draftState,...s.data()};refreshCurrentPage();}});
   const u5=window._onSnapshot(window._collection(window._db,'partidas',partidaId,'jugadores'),s=>{currentPartidaJugadores={};s.forEach(d=>{currentPartidaJugadores[d.id]=d.data();});rebuildParticipantes();refreshCurrentPage();});
@@ -1264,7 +1266,7 @@ async function confirmDraftPick() {
     if(!window._demoMode && currentPartidaId) {
       // ATOMIC: save pick + advance currentPick in one batch — eliminates stuck-turn race condition
       const batch = window._writeBatch(window._db);
-      batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draft', 'data'), draft);
+      batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draft', 'data'), { [draftKey]: draft[draftKey] }, { merge: true });
       batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draftState', 'data'), nextState);
       await batch.commit();
     }
