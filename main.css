@@ -247,7 +247,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 
 /* ── CLASIFICACIÓN ── */
 .clas-grid { display:flex; flex-direction:column; gap:.6rem; }
-.clas-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.9rem 1.1rem; display:grid; grid-template-columns:40px 150px 1fr 80px; align-items:center; gap:.8rem; cursor:pointer; position:relative; overflow:hidden; transition:.2s; }
+.clas-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.9rem 1.1rem; display:grid; grid-template-columns:40px 1fr 80px; align-items:center; gap:.8rem; cursor:pointer; position:relative; overflow:hidden; transition:.2s; }
 .clas-card:hover { border-color:rgba(245,197,24,.2); }
 .clas-card.is-me { border-color:rgba(245,197,24,.4); background:rgba(245,197,24,.03); }
 .clas-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:transparent; }
@@ -507,7 +507,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 }
 @media (max-width:900px) {
   .draft-main { grid-template-columns:minmax(0, 1fr); }
-  .clas-card { grid-template-columns:36px auto auto; }
+  .clas-card { grid-template-columns:36px 1fr 70px; }
 }
 @media (max-width:768px) {
   nav { padding:0 .8rem; flex-wrap:wrap; height:auto; }
@@ -515,7 +515,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
   .tab-btn { padding:.65rem .45rem; font-size:.68rem; }
   main { padding:1rem; width:100%; max-width:100vw; overflow-x:hidden; }
   .yo-stats { grid-template-columns:repeat(2,1fr); }
-  .clas-card { grid-template-columns:30px auto auto; }
+  .clas-card { grid-template-columns:30px 1fr 60px; }
   .clas-flags { flex-wrap:wrap; }
   .pred-match-top { grid-template-columns:1fr 56px 1fr; }
   .lobby-actions { grid-template-columns:minmax(0, 1fr); }
@@ -640,7 +640,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 
   /* Clasificación: simplificar grid */
   .clas-card {
-    grid-template-columns: 32px auto 1fr 64px;
+    grid-template-columns: 30px 1fr 60px;
     gap: .5rem;
     padding: .75rem .85rem;
   }
