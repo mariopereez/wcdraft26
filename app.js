@@ -1787,10 +1787,168 @@ const myTeamsList = draft[myDraftKey] || [];
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
 </div>
+
+<div class="section-title">🔔 <span class="accent">Notificaciones</span></div>
+<div id="yo-notifications-container" style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;font-family:'Barlow Condensed'">
+  <!-- State 1: Need Permission -->
+  <div id="yo-push-prompt" style="display:none;flex-direction:column;gap:.6rem">
+    <div style="font-size:.85rem;color:var(--muted);line-height:1.3">
+      Mantente al día de tu liga: Recibe alertas al instante cuando haya goles, cambios en el podio o cierren las jornadas.
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="requestNotificationPermission()" style="display:flex;align-items:center;justify-content:center;gap:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:1px;padding:.5rem;margin-top:.3rem;width:100%">
+      🔔 Habilitar alertas
+    </button>
+  </div>
+  
+  <!-- State 2: Settings Toggles -->
+  <div id="yo-push-settings" style="display:none;flex-direction:column;gap:.85rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+      <div style="flex:1">
+        <div style="font-size:.92rem;font-weight:700;color:var(--white)">⚽ Goles y Marcadores</div>
+        <div style="font-size:.75rem;color:var(--muted)">Alertas de goles y partidos finalizados en tiempo real.</div>
+      </div>
+      <label class="switch-control">
+        <input type="checkbox" id="notif-matches" onchange="saveNotificationSettings()">
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+    <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+      <div style="flex:1">
+        <div style="font-size:.92rem;font-weight:700;color:var(--white)">🏆 Cambios en la Clasificación</div>
+        <div style="font-size:.75rem;color:var(--muted)">Avisos cuando un jugador sea adelantado o cambie el podio.</div>
+      </div>
+      <label class="switch-control">
+        <input type="checkbox" id="notif-ranking" onchange="saveNotificationSettings()">
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+    <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+      <div style="flex:1">
+        <div style="font-size:.92rem;font-weight:700;color:var(--white)">⏰ Recordatorios de Jornada</div>
+        <div style="font-size:.75rem;color:var(--muted)">Avisos antes del inicio de partidos para no olvidar las predicciones.</div>
+      </div>
+      <label class="switch-control">
+        <input type="checkbox" id="notif-reminders" onchange="saveNotificationSettings()">
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+  </div>
+  
+  <!-- State 3: Denied Permission -->
+  <div id="yo-push-denied" style="display:none;flex-direction:column;gap:.4rem;text-align:center">
+    <div style="font-size:1.2rem">⚠️</div>
+    <div style="font-size:.9rem;font-weight:700;color:var(--white)">Notificaciones bloqueadas</div>
+    <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
+      Has desactivado las notificaciones para esta web. Habilítalas en la configuración de tu navegador o dispositivo para no perderte nada.
+    </div>
+  </div>
+
+  <!-- State 4: Unsupported Browser -->
+  <div id="yo-push-unsupported" style="display:none;flex-direction:column;gap:.4rem;text-align:center">
+    <div style="font-size:1.2rem">ℹ️</div>
+    <div style="font-size:.9rem;font-weight:700;color:var(--white)">No soportado</div>
+    <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
+      Tu navegador o dispositivo no soporta notificaciones push en este momento. Si estás en iOS, asegúrate de añadir la web a tu pantalla de inicio.
+    </div>
+  </div>
+</div>
+
 <div class="section-title"><span class="accent">Mis</span> Rivales</div><div class="yo-rivals">${ranking.filter(r=>r.name!==myName).map(r=>{const diff=r.total-myScore.total,pos=ranking.findIndex(x=>x.name===r.name)+1;return `<div class="rival-card"><div style="display:flex;align-items:center;gap:.6rem">${avatarEl(r.name,'',36)}<div><div class="rival-name">${r.name} <span style="font-size:.7rem;color:var(--muted)">#${pos}</span></div><div class="rival-diff ${diff>0?'pos':'neg'}">${diff>0?'↑ '+diff+' pts por delante':'↓ '+Math.abs(diff)+' pts detrás'}</div></div></div><div class="rival-pts">${r.total}</div></div>`;}).join('')}</div>`;
   const simWrap=document.getElementById('yo-sim-wrap');if(simWrap)renderSimulator(simWrap);
+  setTimeout(() => { if (typeof updateNotificationSettingsUI === 'function') updateNotificationSettingsUI(); }, 50);
 }
 function handleYoPhotoUpload(input) { resizeAndUploadAvatar(getCurrentPlayerName(), input.files[0], ()=>{ updateNavAvatar(); _yoLastHash=''; renderYo(); }); }
+
+// ── NOTIFICACIONES SETTINGS ───────────────────────────────
+function updateNotificationSettingsUI() {
+  const container = document.getElementById('yo-notifications-container');
+  if (!container) return;
+
+  const promptEl = document.getElementById('yo-push-prompt');
+  const settingsEl = document.getElementById('yo-push-settings');
+  const deniedEl = document.getElementById('yo-push-denied');
+  const unsupportedEl = document.getElementById('yo-push-unsupported');
+
+  if (!promptEl || !settingsEl || !deniedEl || !unsupportedEl) return;
+
+  // Hide all initially
+  promptEl.style.display = 'none';
+  settingsEl.style.display = 'none';
+  deniedEl.style.display = 'none';
+  unsupportedEl.style.display = 'none';
+
+  if (!('Notification' in window)) {
+    unsupportedEl.style.display = 'flex';
+    return;
+  }
+
+  const permission = Notification.permission;
+  if (permission === 'denied') {
+    deniedEl.style.display = 'flex';
+  } else if (permission === 'default') {
+    promptEl.style.display = 'flex';
+  } else if (permission === 'granted') {
+    settingsEl.style.display = 'flex';
+    // Load existing settings
+    let saved = { matches: true, ranking: true, reminders: true };
+    try {
+      const stored = localStorage.getItem('notification_settings');
+      if (stored) {
+        saved = JSON.parse(stored);
+      }
+    } catch(e) {}
+    
+    const m = document.getElementById('notif-matches');
+    const r = document.getElementById('notif-ranking');
+    const rem = document.getElementById('notif-reminders');
+    if (m) m.checked = saved.matches !== false;
+    if (r) r.checked = saved.ranking !== false;
+    if (rem) rem.checked = saved.reminders !== false;
+  }
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  try {
+    const permission = await Notification.requestPermission();
+    updateNotificationSettingsUI();
+    if (permission === 'granted') {
+      saveNotificationSettings();
+    }
+  } catch(e) {
+    console.error("Error requesting permission", e);
+  }
+}
+
+async function saveNotificationSettings() {
+  const m = document.getElementById('notif-matches');
+  const r = document.getElementById('notif-ranking');
+  const rem = document.getElementById('notif-reminders');
+  
+  const settings = {
+    matches: m ? m.checked : true,
+    ranking: r ? r.checked : true,
+    reminders: rem ? rem.checked : true,
+    updatedAt: Date.now()
+  };
+
+  localStorage.setItem('notification_settings', JSON.stringify(settings));
+
+  if (currentUser && window._setDoc && window._doc && window._db) {
+    try {
+      await window._setDoc(
+        window._doc(window._db, 'usuarios', currentUser.uid),
+        { notificationSettings: settings },
+        { merge: true }
+      );
+    } catch(e) {
+      console.error("Error saving settings to Firestore", e);
+    }
+  }
+}
+
 
 // ── PLAYER CARD (Canvas) ───────────────────────────────────
 function showPlayerCard() {
