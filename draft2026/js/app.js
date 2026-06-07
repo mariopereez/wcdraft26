@@ -91,7 +91,7 @@ const PAGE_BG_PHOTOS = {
   reglas:        'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Zinedine_Zidane_at_the_2006_World_Cup.jpg/1280px-Zinedine_Zidane_at_the_2006_World_Cup.jpg'
 };
 const GROUP_MATCH_SLOTS = [{day:0,hour:18,minute:0},{day:0,hour:21,minute:0},{day:1,hour:18,minute:0},{day:1,hour:21,minute:0},{day:4,hour:18,minute:0},{day:4,hour:21,minute:0}];
-const KNOCKOUT_SLOTS = {r16:{startDay:18,count:16},r8:{startDay:25,count:8},r4:{startDay:30,count:4},semi:{startDay:34,count:2},third:{startDay:37,count:1},final:{startDay:38,count:1}};
+const KNOCKOUT_SLOTS = {r16:{startDay:17,count:16},r8:{startDay:23,count:8},r4:{startDay:28,count:4},semi:{startDay:33,count:2},third:{startDay:37,count:1},final:{startDay:38,count:1}};
 const SUPER_ADMIN_EMAILS = ['javier.sacramento.castells@gmail.com','sergioredalb@gmail.com','marioutebo05@gmail.com'];
 
 // ── STATE ──────────────────────────────────────────────────
@@ -731,10 +731,40 @@ function guessGroupFromTeams(h,a) { for(const [g,ts] of Object.entries(GRUPOS_WC
 
 function buildGroupSeedMatches() {
   const ms=[]; let n=1, vi=0;
+  const dayMaps = [
+    [0, 1, 6, 7, 13, 13], // A
+    [1, 2, 7, 8, 13, 13], // B
+    [2, 3, 8, 9, 14, 14], // C
+    [2, 3, 8, 9, 14, 14], // D
+    [3, 4, 9, 10, 14, 14], // E
+    [4, 4, 10, 10, 15, 15], // F
+    [4, 5, 10, 11, 15, 15], // G
+    [5, 5, 11, 11, 15, 15], // H
+    [5, 6, 11, 12, 16, 16], // I
+    [6, 6, 12, 12, 16, 16], // J
+    [6, 7, 12, 13, 16, 16], // K
+    [7, 7, 13, 13, 16, 16]  // L
+  ];
+  const hourMaps = [
+    [19, 22, 19, 22, 20, 20], // A
+    [19, 22, 19, 22, 23, 23], // B
+    [19, 22, 19, 22, 20, 20], // C
+    [19, 22, 19, 22, 23, 23], // D
+    [19, 22, 19, 22, 20, 20], // E
+    [19, 22, 19, 22, 23, 23], // F
+    [19, 22, 19, 22, 20, 20], // G
+    [19, 22, 19, 22, 23, 23], // H
+    [19, 22, 19, 22, 20, 20], // I
+    [19, 22, 19, 22, 23, 23], // J
+    [19, 22, 19, 22, 20, 20], // K
+    [19, 22, 19, 22, 23, 23]  // L
+  ];
   Object.entries(GRUPOS_WC2026).forEach(([group,teams],gi)=>{
     [[0,1],[2,3],[0,2],[3,1],[0,3],[1,2]].forEach(([hi,ai],pi)=>{
-      const slot=GROUP_MATCH_SLOTS[pi], venue=getSeedVenueByIndex(vi++);
-      ms.push({id:`seed-g-${group}-${pi+1}`,_seed:true,number:n++,homeTeam:{name:TEAM_MAP[teams[hi]]||teams[hi]},awayTeam:{name:TEAM_MAP[teams[ai]]||teams[ai]},utcDate:makeUtcIso(gi+slot.day,slot.hour,slot.minute),status:'SCHEDULED',stage:'GROUP_STAGE',group:`GROUP_${group}`,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});
+      const dayOffset = dayMaps[gi][pi];
+      const hour = hourMaps[gi][pi];
+      const venue=getSeedVenueByIndex(vi++);
+      ms.push({id:`seed-g-${group}-${pi+1}`,_seed:true,number:n++,homeTeam:{name:TEAM_MAP[teams[hi]]||teams[hi]},awayTeam:{name:TEAM_MAP[teams[ai]]||teams[ai]},utcDate:makeUtcIso(dayOffset,hour,0),status:'SCHEDULED',stage:'GROUP_STAGE',group:`GROUP_${group}`,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});
     });
   });
   return ms;
@@ -742,7 +772,22 @@ function buildGroupSeedMatches() {
 function buildKnockoutSeedMatches() {
   const ms=[]; let vi=72;
   const push=(key,label,count,startDay)=>{
-    for(let i=0;i<count;i++){const venue=getSeedVenueByIndex(vi++);ms.push({id:`seed-${key}-${i+1}`,_seed:true,number:73+ms.length,homeTeam:{name:'TBD'},awayTeam:{name:'TBD'},utcDate:makeUtcIso(startDay+Math.floor(i/2),18+(i%2)*3,0),status:'SCHEDULED',stage:label,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});}
+    for(let i=0;i<count;i++){
+      const venue=getSeedVenueByIndex(vi++);
+      let dayOffset;
+      if (key === 'r16') {
+        dayOffset = startDay + Math.floor(i / 3);
+      } else if (key === 'r8') {
+        dayOffset = startDay + Math.floor(i / 2);
+      } else if (key === 'r4') {
+        dayOffset = startDay + Math.floor(i / 2);
+      } else if (key === 'semi') {
+        dayOffset = startDay + i;
+      } else {
+        dayOffset = startDay;
+      }
+      ms.push({id:`seed-${key}-${i+1}`,_seed:true,number:73+ms.length,homeTeam:{name:'TBD'},awayTeam:{name:'TBD'},utcDate:makeUtcIso(dayOffset,18+(i%2)*3,0),status:'SCHEDULED',stage:label,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});
+    }
   };
   push('r16','LAST_32',KNOCKOUT_SLOTS.r16.count,KNOCKOUT_SLOTS.r16.startDay);
   push('r8','LAST_16',KNOCKOUT_SLOTS.r8.count,KNOCKOUT_SLOTS.r8.startDay);
