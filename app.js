@@ -1805,7 +1805,7 @@ const myTeamsList = draft[myDraftKey] || [];
     <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
       <div style="flex:1">
         <div style="font-size:.92rem;font-weight:700;color:var(--white)">⚽ Goles y Marcadores</div>
-        <div style="font-size:.75rem;color:var(--muted)">Alertas de goles y partidos finalizados en tiempo real.</div>
+        <div style="font-size:.75rem;color:var(--muted)">Alertas en tiempo real de goles y resultados de tus equipos.</div>
       </div>
       <label class="switch-control">
         <input type="checkbox" id="notif-matches" onchange="saveNotificationSettings()">
@@ -1816,7 +1816,7 @@ const myTeamsList = draft[myDraftKey] || [];
     <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
       <div style="flex:1">
         <div style="font-size:.92rem;font-weight:700;color:var(--white)">🏆 Cambios en la Clasificación</div>
-        <div style="font-size:.75rem;color:var(--muted)">Avisos cuando un jugador sea adelantado o cambie el podio.</div>
+        <div style="font-size:.75rem;color:var(--muted)">Avisos cuando subas o bajes de posición en la tabla.</div>
       </div>
       <label class="switch-control">
         <input type="checkbox" id="notif-ranking" onchange="saveNotificationSettings()">
@@ -1827,7 +1827,7 @@ const myTeamsList = draft[myDraftKey] || [];
     <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
       <div style="flex:1">
         <div style="font-size:.92rem;font-weight:700;color:var(--white)">⏰ Recordatorios de Jornada</div>
-        <div style="font-size:.75rem;color:var(--muted)">Avisos antes del inicio de partidos para no olvidar las predicciones.</div>
+        <div style="font-size:.75rem;color:var(--muted)">Avisos antes del inicio de los partidos de tus equipos.</div>
       </div>
       <label class="switch-control">
         <input type="checkbox" id="notif-reminders" onchange="saveNotificationSettings()">
