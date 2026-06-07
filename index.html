@@ -387,32 +387,41 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="home-hero">
           <div class="home-hero-title" id="hero-partida-name">MUNDIAL DRAFT 2026</div>
           <div class="home-hero-sub" id="hero-partida-sub">Elige tus selecciones · Compite por la gloria</div>
-          <div style="margin-top:.3rem">
+          <div style="margin-top:.3rem" id="hero-cd-container">
             <div style="font-family:'Barlow Condensed';font-size:.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem">Partido inaugural</div>
             <div class="hcd-wrap" id="hero-cd"></div>
             <div style="font-size:.62rem;color:var(--muted2);font-family:'Barlow Condensed';margin-top:.3rem" id="hero-cd-match"></div>
           </div>
         </div>
-        <div class="participants-strip">
-          <div class="participants-strip-title">Participantes</div>
-          <div class="participants-row" id="participants-row"></div>
+        
+        <!-- Mi Estado -->
+        <div id="home-my-status-wrap"></div>
+        
+        <!-- El Podio -->
+        <div id="home-podium-wrap"></div>
+        
+        <!-- Partidos Calientes -->
+        <div id="home-hot-matches-wrap">
+          <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Partidos</span> Calientes</div>
+          <div id="hot-matches-container"><div class="skeleton" style="height:90px"></div></div>
         </div>
-        <div>
-          <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Partido</span> del día</div>
-          <div id="match-of-day-wrap"><div class="skeleton" style="height:90px"></div></div>
-        </div>
-        <div id="my-matches-section" style="display:none">
-          <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Próximos</span> de tus equipos</div>
-          <div id="my-matches-wrap"></div>
-        </div>
+
+        <!-- Mis Selecciones -->
         <div id="home-my-teams-section" style="display:none">
           <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Mis</span> Selecciones</div>
           <div id="home-my-teams-wrap" class="home-my-teams-wrap"></div>
         </div>
       </div>
+      
       <div class="home-right">
+        <!-- Feed / Última Hora -->
+        <div class="ranking-sidebar" style="margin-bottom:1.5rem">
+          <div class="ranking-sidebar-header">Última Hora</div>
+          <div id="feed-sidebar-body" style="padding:1rem; font-size:.8rem; color:var(--muted); font-family:'Barlow Condensed'; text-align:center;">Próximamente...</div>
+        </div>
+        <!-- Clasificación (Desktop) -->
         <div class="ranking-sidebar">
-          <div class="ranking-sidebar-header">Clasificación</div>
+          <div class="ranking-sidebar-header">Clasificación General</div>
           <div id="ranking-sidebar-body"></div>
         </div>
       </div>

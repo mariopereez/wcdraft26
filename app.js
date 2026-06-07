@@ -350,20 +350,12 @@ async function doChangeNickname() {
 window._onAuthReady = function(user, profile) {
   // Cancelar timeout de auth (Firebase respondió correctamente)
   if(window._authTimeout) { clearTimeout(window._authTimeout); window._authTimeout=null; }
-  // Ocultar loading
   const ls = document.getElementById('loading-screen');
   if(ls) ls.style.display = 'none';
   currentUser = user; currentProfile = profile;
-
-  // Soporte para deep-linking en PWA: si hay parámetro de página y última partida guardada, entrar directo
   const urlParams = new URLSearchParams(window.location.search);
-  const pageParam = urlParams.get('page');
-  const lastPartidaId = localStorage.getItem('last_partida_id');
-  if(pageParam && lastPartidaId && lastPartidaId !== '__DEMO__') {
-    enterPartida(lastPartidaId);
-    return;
-  }
 
+  // Deep-link: ?join=XXXX → Lobby con código autocompletado
   const joinCode = urlParams.get('join');
   if(joinCode) {
     showScreen('lobby');
@@ -375,17 +367,32 @@ window._onAuthReady = function(user, profile) {
     return;
   }
 
-  // Si el displayName parece un email (sin apodo configurado), pedir apodo una vez
+  // Sin apodo configurado: pedir apodo una vez antes de entrar
   if(profile && profile.displayName && profile.displayName.includes('@') && !localStorage.getItem('apodo_set_'+user.uid)) {
     showScreen('lobby');
-    loadLobby().then(() => {
-      setTimeout(() => showChangeNickname(), 600);
+    loadLobby().then(() => { setTimeout(() => showChangeNickname(), 600); });
+    return;
+  }
+
+  // ── ACCESO DIRECTO AL ÚLTIMO TORNEO (UX PWA) ──
+  // Si el usuario tiene un último torneo guardado, entrar directamente sin lobby.
+  // El usuario puede volver al lobby desde la pestaña "Yo".
+  const lastPartidaId = localStorage.getItem('last_partida_id');
+  if(lastPartidaId && lastPartidaId !== '__DEMO__') {
+    enterApp(lastPartidaId).catch(() => {
+      // El torneo ya no existe o hay error: limpiar y mostrar lobby
+      localStorage.removeItem('last_partida_id');
+      showScreen('lobby');
+      loadLobby();
     });
     return;
   }
+
+  // Sin torneo guardado → Lobby normal
   showScreen('lobby');
   loadLobby();
 };
+
 window._onSignedOut = function() {
   currentUser = null; currentProfile = null; currentPartidaId = null;
   unsubscribeAll();
@@ -1066,45 +1073,142 @@ function getRanking() { return PARTICIPANTES.map(p=>({name:p,...calcP(p)})).sort
 function renderHome() {
   const ranking=getRanking(); const myTeams=getMyTeams(); const myName=getCurrentPlayerName();
   const heroN=document.getElementById('hero-partida-name'); if(heroN&&currentPartidaConfig) heroN.textContent=currentPartidaConfig.nombre.toUpperCase();
-  const pRow=document.getElementById('participants-row');
-  if(pRow) pRow.innerHTML=ranking.map((r,i)=>`<div class="participant-chip ${r.name===myName?'is-me':''}">${avatarEl(r.name,'',22)}<span>${['🥇','🥈','🥉'][i]||''} ${r.name}</span><span style="font-family:'Bebas Neue';font-size:.85rem;color:${r.name===myName?'var(--gold)':'var(--muted)'};margin-left:.2rem">${r.total}</span></div>`).join('');
-  const allDraftTeams=new Set(Object.values(draft).flat().filter(Boolean));
-  const liveMs=matches.filter(m=>(m.status==='IN_PLAY'||m.status==='PAUSED')&&!m._seed);
-  const todayMs=matches.filter(m=>isToday(m.utcDate)&&m.status!=='FINISHED'&&!m._seed);
-  const upcomingMs=matches.filter(m=>m.status==='SCHEDULED'||m.status==='TIMED');
-  let mod=null;
-  if(liveMs.length>0) mod=[...liveMs].sort((a,b)=>getStagePriority(b.stage)-getStagePriority(a.stage))[0];
-  else if(todayMs.length>0){const tm=todayMs.filter(m=>{const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');return allDraftTeams.has(h)||allDraftTeams.has(a);});mod=(tm.length>0?tm:todayMs).sort((a,b)=>getStagePriority(b.stage)-getStagePriority(a.stage))[0];}
-  else if(upcomingMs.length>0){const um=upcomingMs.filter(m=>{const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');return allDraftTeams.has(h)||allDraftTeams.has(a);});mod=[...(um.length>0?um:upcomingMs)].sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate))[0];}
-  const modWrap=document.getElementById('match-of-day-wrap');
-  if(mod&&modWrap){
-    const hES=nameES(mod.homeTeam?.name||'TBD'),aES=nameES(mod.awayTeam?.name||'TBD');
-    const ho=getOwnerData(hES),ao=getOwnerData(aES);
-    const st=mod.status; let sc='',stTxt='';
-    if(st==='FINISHED'){sc=`<div class="mod-score">${mod.score?.fullTime?.home??'-'}–${mod.score?.fullTime?.away??'-'}</div>`;stTxt='Finalizado';}
-    else if(st==='IN_PLAY'||st==='PAUSED'){sc=`<div class="mod-score live">${mod.score?.fullTime?.home??0}–${mod.score?.fullTime?.away??0}</div>`;stTxt='🔴 EN JUEGO';}
-    else{sc=`<div class="mod-time">${formatTime(mod.utcDate)}</div>`;stTxt=formatDate(mod.utcDate);}
-    const stN={'FINAL':'⭐ Gran Final','THIRD_PLACE':'🥉 3er Puesto','SEMI_FINALS':'Semis','QUARTER_FINALS':'Cuartos','LAST_16':'Octavos','LAST_32':'Dieciseisavos','GROUP_STAGE':'Grupos'};
-    modWrap.innerHTML=`<div class="match-of-day"><div class="mod-label">🔥 ${stN[mod.stage]||'Partido'} · ${stTxt}</div><div class="mod-teams"><div class="mod-team">${flagImg(hES,'xl')}<div class="mod-team-name">${hES}</div>${ho?ownerTag(ho):''}</div><div style="text-align:center">${sc}</div><div class="mod-team">${flagImg(aES,'xl')}<div class="mod-team-name">${aES}</div>${ao?ownerTag(ao):''}</div></div></div>`;
-  }else if(modWrap) modWrap.innerHTML=`<div class="match-of-day"><div style="text-align:center;padding:1.2rem;color:var(--muted);font-family:'Barlow Condensed'">Sin partidos disponibles aún</div></div>`;
-  const mySec=document.getElementById('my-matches-section'),myWrap=document.getElementById('my-matches-wrap');
-  if(myTeams.size>0){
-    const nextByTeam=[];
-    myTeams.forEach(team=>{const next=matches.filter(m=>{const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');return(h===team||a===team)&&(m.status==='SCHEDULED'||m.status==='TIMED'||m.status==='IN_PLAY'||m.status==='PAUSED');}).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate))[0];if(next)nextByTeam.push({team,match:next});});
-    nextByTeam.sort((a,b)=>new Date(a.match.utcDate)-new Date(b.match.utcDate));
-    if(nextByTeam.length>0){
-      mySec.style.display='block';
-      myWrap.innerHTML=nextByTeam.map(({team,match:m})=>{
-        const h=nameES(m.homeTeam?.name||'TBD'),a=nameES(m.awayTeam?.name||'TBD');
-        const isH=h===team,isA=a===team; const st=m.status; let sc='';
-        if(st==='FINISHED')sc=`<div class="mmc-score">${m.score.fullTime.home}–${m.score.fullTime.away}</div>`;
-        else if(st==='IN_PLAY'||st==='PAUSED')sc=`<div class="mmc-score" style="color:var(--red)">${m.score?.fullTime?.home??0}–${m.score?.fullTime?.away??0}</div>`;
-        else sc=`<div class="mmc-time">${formatTime(m.utcDate)}<br>${formatDate(m.utcDate)}</div>`;
-        return `<div class="my-match-card"><div class="mmc-team">${flagImg(h,'md')}<span style="color:${isH?'var(--gold)':'var(--white)'}">${h}</span></div><div class="mmc-vs">${sc}</div><div class="mmc-team" style="justify-content:flex-end"><span style="color:${isA?'var(--gold)':'var(--white)'}">${a}</span>${flagImg(a,'md')}</div></div>`;
+  
+  // 1. Mi Estado
+  const myStatusWrap = document.getElementById('home-my-status-wrap');
+  if(myStatusWrap) {
+    const myRankIdx = ranking.findIndex(r=>r.name===myName);
+    if(myRankIdx !== -1) {
+      const myData = ranking[myRankIdx];
+      let gapHtml = '';
+      if(myRankIdx > 0) {
+        const nextPlayer = ranking[myRankIdx - 1];
+        const diff = Math.round((nextPlayer.total - myData.total)*10)/10;
+        gapHtml = `<div class="msc-gap">A ${diff} pts de ${nextPlayer.name}</div>`;
+      } else if (ranking.length > 1) {
+        const second = ranking[1];
+        const diff = Math.round((myData.total - second.total)*10)/10;
+        gapHtml = `<div class="msc-gap" style="background:rgba(46,196,182,0.15);color:var(--cyan)">Le sacas ${diff} pts a ${second.name}</div>`;
+      }
+      myStatusWrap.innerHTML = `
+        <div class="my-status-card">
+          <div class="msc-info">
+            <div class="msc-label">Tu Posición</div>
+            <div class="msc-pos">${myRankIdx + 1}º</div>
+            ${gapHtml}
+          </div>
+          <div style="text-align:right">
+            <div class="msc-label">Puntos</div>
+            <div class="msc-pts">${myData.total}</div>
+          </div>
+        </div>`;
+    } else {
+      myStatusWrap.innerHTML = '';
+    }
+  }
+
+  // 2. El Podio
+  const podiumWrap = document.getElementById('home-podium-wrap');
+  if(podiumWrap) {
+    if(ranking.length > 0) {
+      // Reorder top 3 for podium: 2, 1, 3
+      const p1 = ranking[0]; const p2 = ranking[1]; const p3 = ranking[2];
+      let podiumHtml = `<div class="podium-wrap">`;
+      if(p2) podiumHtml += `<div class="podium-step p2"><div class="podium-avatar">${avatarEl(p2.name,'',44)}</div><div class="podium-name">${p2.name}</div><div class="podium-pts">${p2.total}</div><div class="podium-base"><div class="podium-rank-num">2</div></div></div>`;
+      if(p1) podiumHtml += `<div class="podium-step p1"><div class="podium-avatar">${avatarEl(p1.name,'',52)}</div><div class="podium-name">${p1.name}</div><div class="podium-pts">${p1.total}</div><div class="podium-base"><div class="podium-rank-num">1</div></div></div>`;
+      if(p3) podiumHtml += `<div class="podium-step p3"><div class="podium-avatar">${avatarEl(p3.name,'',44)}</div><div class="podium-name">${p3.name}</div><div class="podium-pts">${p3.total}</div><div class="podium-base"><div class="podium-rank-num">3</div></div></div>`;
+      podiumHtml += `</div>`;
+      podiumWrap.innerHTML = podiumHtml;
+    } else {
+      podiumWrap.innerHTML = '';
+    }
+  }
+
+  // 3. Tus Próximos Partidos / Partidos Calientes
+  const hotMatchesWrap = document.getElementById('hot-matches-container');
+  const hotMatchesTitle = document.querySelector('#home-hot-matches-wrap .section-title');
+  const allDraftTeams = new Set(Object.values(draft).flat().filter(Boolean));
+  if(hotMatchesWrap) {
+    const liveMs = matches.filter(m=>(m.status==='IN_PLAY'||m.status==='PAUSED')&&!m._seed);
+    const todayMs = matches.filter(m=>isToday(m.utcDate)&&m.status!=='FINISHED'&&!m._seed);
+    const upcomingMs = matches.filter(m=>m.status==='SCHEDULED'||m.status==='TIMED');
+    
+    // Tus proximos partidos
+    let myMatches = [];
+    if(myTeams.size > 0) {
+      myMatches = [...liveMs, ...todayMs, ...upcomingMs].filter(m => {
+        const h=nameES(m.homeTeam?.name||''), a=nameES(m.awayTeam?.name||'');
+        return myTeams.has(h) || myTeams.has(a);
+      });
+    }
+
+    // Sort by date
+    myMatches.sort((a,b) => {
+      const liveA = a.status==='IN_PLAY'||a.status==='PAUSED' ? -1 : 1;
+      const liveB = b.status==='IN_PLAY'||b.status==='PAUSED' ? -1 : 1;
+      if(liveA !== liveB) return liveA - liveB;
+      return new Date(a.utcDate) - new Date(b.utcDate);
+    });
+    
+    myMatches = myMatches.slice(0, 2);
+
+    let displayMatches = myMatches;
+    let sectionLabel = `<span class="accent">Próximos</span> de tus equipos`;
+    
+    // If no matches for the user, fallback to hot matches
+    if(displayMatches.length === 0) {
+      let hotMatches = [...liveMs, ...todayMs, ...upcomingMs].filter(m => {
+        const h=nameES(m.homeTeam?.name||''), a=nameES(m.awayTeam?.name||'');
+        return allDraftTeams.has(h) || allDraftTeams.has(a);
+      });
+      hotMatches.sort((a,b) => {
+        const liveA = a.status==='IN_PLAY'||a.status==='PAUSED' ? -1 : 1;
+        const liveB = b.status==='IN_PLAY'||b.status==='PAUSED' ? -1 : 1;
+        if(liveA !== liveB) return liveA - liveB;
+        return new Date(a.utcDate) - new Date(b.utcDate);
+      });
+      displayMatches = hotMatches.slice(0, 2);
+      sectionLabel = `<span class="accent">Partidos</span> Calientes`;
+    }
+
+    if(hotMatchesTitle) hotMatchesTitle.innerHTML = sectionLabel;
+    
+    if(displayMatches.length > 0) {
+      hotMatchesWrap.innerHTML = displayMatches.map(m => {
+        const hES=nameES(m.homeTeam?.name||'TBD'), aES=nameES(m.awayTeam?.name||'TBD');
+        const ho=getOwnerData(hES), ao=getOwnerData(aES);
+        const st=m.status; let sc='', stTxt='';
+        if(st==='FINISHED'){sc=`<div class="hmc-score">${m.score?.fullTime?.home??'-'}–${m.score?.fullTime?.away??'-'}</div>`;stTxt='Finalizado';}
+        else if(st==='IN_PLAY'||st==='PAUSED'){sc=`<div class="hmc-score live">${m.score?.fullTime?.home??0}–${m.score?.fullTime?.away??0}</div>`;stTxt='🔴 EN JUEGO';}
+        else{sc=`<div class="hmc-time">${formatTime(m.utcDate)}</div>`;stTxt=formatDate(m.utcDate);}
+        const stN={'FINAL':'⭐ Final','THIRD_PLACE':'🥉 3er','SEMI_FINALS':'Semis','QUARTER_FINALS':'Cuartos','LAST_16':'Octavos','LAST_32':'16avos','GROUP_STAGE':'Grupos'};
+        return `
+          <div class="hot-match-card">
+            <div class="hmc-header">
+              <div class="hmc-label">🔥 ${stN[m.stage]||'Partido'}</div>
+              <div class="hmc-time">${stTxt}</div>
+            </div>
+            <div class="hmc-teams">
+              <div class="hmc-team">
+                ${flagImg(hES,'xl')}
+                <div class="hmc-team-name">${hES}</div>
+                ${ho ? `<div class="hmc-owner ${isSamePlayer(ho.owner, myName)?'is-me':''}">${ho.owner}</div>` : ''}
+              </div>
+              <div style="text-align:center">${sc}</div>
+              <div class="hmc-team">
+                ${flagImg(aES,'xl')}
+                <div class="hmc-team-name">${aES}</div>
+                ${ao ? `<div class="hmc-owner ${isSamePlayer(ao.owner, myName)?'is-me':''}">${ao.owner}</div>` : ''}
+              </div>
+            </div>
+          </div>`;
       }).join('');
-    }else mySec.style.display='none';
-  }else mySec.style.display='none';
-  // RENDERIZAR: Mis Selecciones en el Inicio
+    } else {
+      hotMatchesWrap.innerHTML = `<div class="hot-match-card" style="text-align:center;color:var(--muted);font-family:'Barlow Condensed'">Sin partidos calientes disponibles</div>`;
+    }
+  }
+
+  // 4. Mis Selecciones
   const myTeamsSec = document.getElementById('home-my-teams-section');
   const myTeamsWrap = document.getElementById('home-my-teams-wrap');
   if (myTeams.size > 0 && myTeamsWrap) {
@@ -1128,6 +1232,8 @@ function renderHome() {
   } else if (myTeamsSec) {
     myTeamsSec.style.display = 'none';
   }
+
+  // 5. Sidebar Ranking
   const sb=document.getElementById('ranking-sidebar-body');
   if(sb) sb.innerHTML=ranking.map((r,i)=>`<div class="ranking-sidebar-row ${r.name===myName?'is-me':''}">${['🥇','🥈','🥉'][i]?`<div class="rsb-pos ${i===0?'p1':i===1?'p2':'p3'}">${['🥇','🥈','🥉'][i]}</div>`:`<div class="rsb-pos">${i+1}</div>`}${avatarEl(r.name,'',24)}<div class="rsb-name">${r.name}${r.name===myName?' ⭐':''}</div><div class="rsb-pts">${r.total}</div></div>`).join('');
 }
