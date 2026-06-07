@@ -135,6 +135,8 @@ nav { position:sticky; top:0; z-index:200; background:rgba(7,9,15,.95); backdrop
 #status-bar { background:rgba(46,196,182,.08); border-bottom:1px solid rgba(46,196,182,.15); padding:.3rem 2rem; font-size:.72rem; color:var(--cyan); display:flex; align-items:center; gap:.6rem; font-family:'Barlow Condensed'; position:relative; z-index:1; }
 #status-bar.error { background:rgba(230,57,70,.08); border-color:rgba(230,57,70,.15); color:var(--red); }
 #status-bar.loading { background:rgba(245,197,24,.06); border-color:rgba(245,197,24,.15); color:var(--gold); }
+#status-bar:not(.loading):not(.error):not(.warn) { background: transparent; border-bottom: 1px solid transparent; }
+#status-bar:not(.loading):not(.error):not(.warn) * { visibility: hidden; }
 .pulse { width:6px; height:6px; border-radius:50%; background:currentColor; animation:pulse 2s infinite; flex-shrink:0; }
 @keyframes pulse { 0%,100% { opacity:1; transform:scale(1) } 50% { opacity:.4; transform:scale(.7) } }
 
