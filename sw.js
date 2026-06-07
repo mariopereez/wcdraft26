@@ -3,7 +3,7 @@
 //  Soporte offline básico + cache de assets estáticos
 // ═══════════════════════════════════════════════════════
 
-const CACHE_NAME = 'draft2026-v1';
+const CACHE_NAME = 'draft2026-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -71,28 +71,44 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Navegación (HTML) → Network-first con fallback a cache
-  if (event.request.mode === 'navigate') {
+  // Navegación (HTML), Scripts (JS) y Estilos (CSS) → Network-First
+  const isDocOrCode = event.request.mode === 'navigate' ||
+                      event.request.destination === 'script' ||
+                      event.request.destination === 'style' ||
+                      url.pathname.endsWith('.js') ||
+                      url.pathname.endsWith('.css');
+
+  if (isDocOrCode) {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match('/index.html'))
+        .then(response => {
+          if (response.ok && url.origin === self.location.origin) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then(cached => {
+            if (cached) return cached;
+            if (event.request.mode === 'navigate') return caches.match('/index.html');
+          });
+        })
     );
     return;
   }
 
-  // Assets estáticos (CSS, JS, imágenes) → Cache-first
+  // Otros assets (imágenes, iconos, etc.) → Cache-First
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
-        // Solo cachear respuestas válidas de nuestro propio origen
         if (response.ok && url.origin === self.location.origin) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
       }).catch(() => {
-        // Si es una imagen y no hay cache, devolver SVG placeholder
         if (event.request.destination === 'image') {
           return new Response(
             '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="32"><rect width="48" height="32" fill="#1a2235"/></svg>',

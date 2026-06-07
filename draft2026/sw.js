@@ -4,7 +4,7 @@
 //  Network-First para Firebase y Football API.
 // ═══════════════════════════════════════════════════════
 
-const CACHE_NAME = 'draft2026-v1';
+const CACHE_NAME = 'draft2026-v2';
 
 // Recursos del shell que se cachean en la instalación
 const SHELL_ASSETS = [
@@ -53,26 +53,49 @@ self.addEventListener('fetch', (event) => {
     return; // dejar pasar sin cachear
   }
 
-  // Para el shell estático: Cache-First
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+  // Navegación (HTML), Scripts (JS) y Estilos (CSS) → Network-First
+  const isDocOrCode = event.request.mode === 'navigate' ||
+                      event.request.destination === 'script' ||
+                      event.request.destination === 'style' ||
+                      url.pathname.endsWith('.js') ||
+                      url.pathname.endsWith('.css');
 
-      return fetch(event.request).then((response) => {
-        // Solo cachear respuestas válidas de nuestro propio origen
-        if (
-          response.ok &&
-          url.origin === self.location.origin &&
-          event.request.method === 'GET'
-        ) {
+  if (isDocOrCode) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response.ok && url.origin === self.location.origin) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then(cached => {
+            if (cached) return cached;
+            if (event.request.mode === 'navigate') return caches.match('/index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Otros assets (imágenes, iconos, etc.) → Cache-First
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        if (response.ok && url.origin === self.location.origin) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
       }).catch(() => {
-        // Si no hay red y no hay caché, devolver el index para SPAs
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+        if (event.request.destination === 'image') {
+          return new Response(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="32"><rect width="48" height="32" fill="#1a2235"/></svg>',
+            { headers: { 'Content-Type': 'image/svg+xml' } }
+          );
         }
       });
     })
