@@ -12,8 +12,36 @@
   --t1:#e63946; --t2:#f4a261; --t3:#e9c46a; --t4:#2ec4b6; --t5:#4895ef; --t6:#b185db;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; overflow-x:hidden; width:100%; max-width:100vw; position:relative; }
-body { background:var(--bg); color:var(--white); font-family:'Barlow',sans-serif; min-height:100vh; overflow-x:hidden; width:100%; max-width:100vw; position:relative; }
+html {
+  scroll-behavior:smooth;
+  overflow-x:hidden;
+  width:100%;
+  max-width:100vw;
+  position:relative;
+  touch-action: manipulation;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body {
+  background:var(--bg);
+  color:var(--white);
+  font-family:'Barlow',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+  width:100%;
+  max-width:100vw;
+  position:relative;
+  touch-action: manipulation;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Ocultar barra de desplazamiento en toda la app */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 
 /* ── HIDDEN (clase global) ── */
 .hidden { display:none !important; }
@@ -1410,8 +1438,8 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 }
 .htc-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: 6px;
+  right: 6px;
   color: #fff;
   font-family: 'Bebas Neue';
   font-size: 0.72rem;

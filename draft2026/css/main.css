@@ -12,8 +12,29 @@
   --t1:#e63946; --t2:#f4a261; --t3:#e9c46a; --t4:#2ec4b6; --t5:#4895ef; --t6:#b185db;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body { background:var(--bg); color:var(--white); font-family:'Barlow',sans-serif; min-height:100vh; overflow-x:hidden; }
+html {
+  scroll-behavior:smooth;
+  touch-action: manipulation;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body {
+  background:var(--bg);
+  color:var(--white);
+  font-family:'Barlow',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+  touch-action: manipulation;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Ocultar barra de desplazamiento en toda la app */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 
 /* ── SCREENS ── */
 .screen { position:fixed; inset:0; z-index:2000; display:flex; align-items:center; justify-content:center; padding:1.5rem; overflow-y:auto; }

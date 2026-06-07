@@ -3,6 +3,17 @@
 //  Lógica completa de la aplicación
 // ═══════════════════════════════════════════════════════════
 
+// Prevenir pinch-to-zoom táctil de forma nativa
+document.addEventListener('touchstart', function (event) {
+  if (event.touches.length > 1) {
+    event.preventDefault();
+  }
+}, { passive: false });
+
+document.addEventListener('gesturestart', function (event) {
+  event.preventDefault();
+});
+
 // ── CONSTANTS ──────────────────────────────────────────────
 const FOOTBALL_API_URL = 'https://api.football-data.org/v4/competitions/WC/matches';
 const FOOTBALL_DATA_TOKEN_KEY = 'mundial_fd_token_2026';
