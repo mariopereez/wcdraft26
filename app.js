@@ -1789,68 +1789,84 @@ const myTeamsList = draft[myDraftKey] || [];
 </div>
 
 <div class="section-title">🔔 <span class="accent">Notificaciones</span></div>
-<div id="yo-notifications-container" style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;font-family:'Barlow Condensed'">
-  <!-- State 1: Need Permission -->
-  <div id="yo-push-prompt" style="display:none;flex-direction:column;gap:.6rem">
-    <div style="font-size:.85rem;color:var(--muted);line-height:1.3">
-      Mantente al día de tu liga: Recibe alertas al instante cuando haya goles, cambios en el podio o cierren las jornadas.
-    </div>
-    <button class="btn btn-gold btn-sm" onclick="requestNotificationPermission()" style="display:flex;align-items:center;justify-content:center;gap:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:1px;padding:.5rem;margin-top:.3rem;width:100%">
-      🔔 Habilitar alertas
-    </button>
-  </div>
+<div id="yo-notifications-container" style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:0;margin-bottom:1.5rem;font-family:'Barlow Condensed';overflow:hidden">
   
-  <!-- State 2: Settings Toggles -->
-  <div id="yo-push-settings" style="display:none;flex-direction:column;gap:.85rem">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-      <div style="flex:1">
-        <div style="font-size:.92rem;font-weight:700;color:var(--white)">⚽ Goles y Marcadores</div>
-        <div style="font-size:.75rem;color:var(--muted)">Alertas en tiempo real de goles y resultados de tus equipos.</div>
-      </div>
-      <label class="switch-control">
-        <input type="checkbox" id="notif-matches" onchange="saveNotificationSettings()">
-        <span class="switch-slider"></span>
-      </label>
-    </div>
-    <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-      <div style="flex:1">
-        <div style="font-size:.92rem;font-weight:700;color:var(--white)">🏆 Cambios en la Clasificación</div>
-        <div style="font-size:.75rem;color:var(--muted)">Avisos cuando subas o bajes de posición en la tabla.</div>
-      </div>
-      <label class="switch-control">
-        <input type="checkbox" id="notif-ranking" onchange="saveNotificationSettings()">
-        <span class="switch-slider"></span>
-      </label>
-    </div>
-    <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-      <div style="flex:1">
-        <div style="font-size:.92rem;font-weight:700;color:var(--white)">⏰ Recordatorios de Jornada</div>
-        <div style="font-size:.75rem;color:var(--muted)">Avisos antes del inicio de los partidos de tus equipos.</div>
-      </div>
-      <label class="switch-control">
-        <input type="checkbox" id="notif-reminders" onchange="saveNotificationSettings()">
-        <span class="switch-slider"></span>
-      </label>
-    </div>
-  </div>
-  
-  <!-- State 3: Denied Permission -->
-  <div id="yo-push-denied" style="display:none;flex-direction:column;gap:.4rem;text-align:center">
-    <div style="font-size:1.2rem">⚠️</div>
-    <div style="font-size:.9rem;font-weight:700;color:var(--white)">Notificaciones bloqueadas</div>
-    <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
-      Has desactivado las notificaciones para esta web. Habilítalas en la configuración de tu navegador o dispositivo para no perderte nada.
-    </div>
+  <!-- Clickable Header to Toggle -->
+  <div onclick="toggleNotificationsCollapse()" style="display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;cursor:pointer;user-select:none">
+    <span id="yo-notif-summary" style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1;color:var(--white)">
+      Configurar alertas y avisos
+    </span>
+    <!-- Arrow Icon -->
+    <svg id="yo-notif-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2" style="transition: transform 0.3s; transform: rotate(0deg)">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
   </div>
 
-  <!-- State 4: Unsupported Browser -->
-  <div id="yo-push-unsupported" style="display:none;flex-direction:column;gap:.4rem;text-align:center">
-    <div style="font-size:1.2rem">ℹ️</div>
-    <div style="font-size:.9rem;font-weight:700;color:var(--white)">No soportado</div>
-    <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
-      Tu navegador o dispositivo no soporta notificaciones push en este momento. Si estás en iOS, asegúrate de añadir la web a tu pantalla de inicio.
+  <!-- Collapsible Content Panel -->
+  <div id="yo-notif-content-panel" style="max-height:0px;overflow:hidden;transition:max-height 0.35s ease-out;padding:0 1rem 0 1rem">
+    
+    <!-- State 1: Need Permission -->
+    <div id="yo-push-prompt" style="display:none;flex-direction:column;gap:.6rem;padding-bottom:1rem">
+      <div style="font-size:.85rem;color:var(--muted);line-height:1.3">
+        Mantente al día de tu liga: Recibe alertas al instante cuando haya goles, cambios en el podio o cierren las jornadas.
+      </div>
+      <button class="btn btn-gold btn-sm" onclick="requestNotificationPermission()" style="display:flex;align-items:center;justify-content:center;gap:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:1px;padding:.5rem;margin-top:.3rem;width:100%">
+        🔔 Habilitar alertas
+      </button>
+    </div>
+    
+    <!-- State 2: Settings Toggles -->
+    <div id="yo-push-settings" style="display:none;flex-direction:column;gap:.85rem;padding-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+        <div style="flex:1">
+          <div style="font-size:.92rem;font-weight:700;color:var(--white)">⚽ Goles y Marcadores</div>
+          <div style="font-size:.75rem;color:var(--muted)">Alertas en tiempo real de goles y resultados de tus equipos.</div>
+        </div>
+        <label class="switch-control">
+          <input type="checkbox" id="notif-matches" onchange="saveNotificationSettings()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+        <div style="flex:1">
+          <div style="font-size:.92rem;font-weight:700;color:var(--white)">🏆 Cambios en la Clasificación</div>
+          <div style="font-size:.75rem;color:var(--muted)">Avisos cuando subas o bajes de posición en la tabla.</div>
+        </div>
+        <label class="switch-control">
+          <input type="checkbox" id="notif-ranking" onchange="saveNotificationSettings()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+        <div style="flex:1">
+          <div style="font-size:.92rem;font-weight:700;color:var(--white)">⏰ Recordatorios de Jornada</div>
+          <div style="font-size:.75rem;color:var(--muted)">Avisos antes del inicio de los partidos de tus equipos.</div>
+        </div>
+        <label class="switch-control">
+          <input type="checkbox" id="notif-reminders" onchange="saveNotificationSettings()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+    </div>
+    
+    <!-- State 3: Denied Permission -->
+    <div id="yo-push-denied" style="display:none;flex-direction:column;gap:.4rem;text-align:center;padding-bottom:1rem">
+      <div style="font-size:1.2rem">⚠️</div>
+      <div style="font-size:.9rem;font-weight:700;color:var(--white)">Notificaciones bloqueadas</div>
+      <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
+        Has desactivado las notificaciones para esta web. Habilítalas en la configuración de tu navegador o dispositivo para no perderte nada.
+      </div>
+    </div>
+
+    <!-- State 4: Unsupported Browser -->
+    <div id="yo-push-unsupported" style="display:none;flex-direction:column;gap:.4rem;text-align:center;padding-bottom:1rem">
+      <div style="font-size:1.2rem">ℹ️</div>
+      <div style="font-size:.9rem;font-weight:700;color:var(--white)">No soportado</div>
+      <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
+        Tu navegador o dispositivo no soporta notificaciones push en este momento. Si estás en iOS, asegúrate de añadir la web a tu pantalla de inicio.
+      </div>
     </div>
   </div>
 </div>
@@ -1862,6 +1878,22 @@ const myTeamsList = draft[myDraftKey] || [];
 function handleYoPhotoUpload(input) { resizeAndUploadAvatar(getCurrentPlayerName(), input.files[0], ()=>{ updateNavAvatar(); _yoLastHash=''; renderYo(); }); }
 
 // ── NOTIFICACIONES SETTINGS ───────────────────────────────
+function toggleNotificationsCollapse() {
+  const panel = document.getElementById('yo-notif-content-panel');
+  const arrow = document.getElementById('yo-notif-arrow');
+  if (!panel || !arrow) return;
+  const isCollapsed = panel.style.maxHeight === '0px' || !panel.style.maxHeight;
+  if (isCollapsed) {
+    panel.style.maxHeight = '500px';
+    arrow.style.transform = 'rotate(180deg)';
+    window._yoNotifExpanded = true;
+  } else {
+    panel.style.maxHeight = '0px';
+    arrow.style.transform = 'rotate(0deg)';
+    window._yoNotifExpanded = false;
+  }
+}
+
 function updateNotificationSettingsUI() {
   const container = document.getElementById('yo-notifications-container');
   if (!container) return;
@@ -1879,16 +1911,41 @@ function updateNotificationSettingsUI() {
   deniedEl.style.display = 'none';
   unsupportedEl.style.display = 'none';
 
+  // Restore expansion state from window memory
+  const panel = document.getElementById('yo-notif-content-panel');
+  const arrow = document.getElementById('yo-notif-arrow');
+  if (panel && arrow) {
+    if (window._yoNotifExpanded) {
+      panel.style.maxHeight = '500px';
+      arrow.style.transform = 'rotate(180deg)';
+    } else {
+      panel.style.maxHeight = '0px';
+      arrow.style.transform = 'rotate(0deg)';
+    }
+  }
+
   if (!('Notification' in window)) {
     unsupportedEl.style.display = 'flex';
+    const summaryEl = document.getElementById('yo-notif-summary');
+    if (summaryEl) summaryEl.textContent = 'No soportado';
     return;
   }
 
   const permission = Notification.permission;
+  const summaryEl = document.getElementById('yo-notif-summary');
+
   if (permission === 'denied') {
     deniedEl.style.display = 'flex';
+    if (summaryEl) {
+      summaryEl.textContent = 'Bloqueadas (Ver ayuda)';
+      summaryEl.style.color = 'var(--red)';
+    }
   } else if (permission === 'default') {
     promptEl.style.display = 'flex';
+    if (summaryEl) {
+      summaryEl.textContent = 'Habilitar notificaciones';
+      summaryEl.style.color = 'var(--white)';
+    }
   } else if (permission === 'granted') {
     settingsEl.style.display = 'flex';
     // Load existing settings
@@ -1906,6 +1963,19 @@ function updateNotificationSettingsUI() {
     if (m) m.checked = saved.matches !== false;
     if (r) r.checked = saved.ranking !== false;
     if (rem) rem.checked = saved.reminders !== false;
+
+    if (summaryEl) {
+      const active = [];
+      if (saved.matches !== false) active.push('⚽');
+      if (saved.ranking !== false) active.push('🏆');
+      if (saved.reminders !== false) active.push('⏰');
+      if (active.length > 0) {
+        summaryEl.textContent = `Ajustes activos: ${active.join(' ')}`;
+      } else {
+        summaryEl.textContent = 'Notificaciones desactivadas';
+      }
+      summaryEl.style.color = 'var(--white)';
+    }
   }
 }
 
