@@ -60,7 +60,7 @@ const BRACKET_ROUNDS = [
 ];
 const GRUPOS_WC2026 = {
   "A":["México","Sudáfrica","Corea del Sur","Repesca 1"],
-  "B":["Canadá","Catar","Suiza","Repesca 2"],
+  "B":["Canadá","Bosnia y Herzegovina","Catar","Suiza"],
   "C":["Brasil","Marruecos","Haití","Escocia"],
   "D":["Estados Unidos","Paraguay","Australia","Repesca 3"],
   "E":["Alemania","Curazao","Costa de Marfil","Ecuador"],
@@ -91,7 +91,7 @@ const PAGE_BG_PHOTOS = {
   reglas:        'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Zinedine_Zidane_at_the_2006_World_Cup.jpg/1280px-Zinedine_Zidane_at_the_2006_World_Cup.jpg'
 };
 const GROUP_MATCH_SLOTS = [{day:0,hour:18,minute:0},{day:0,hour:21,minute:0},{day:1,hour:18,minute:0},{day:1,hour:21,minute:0},{day:4,hour:18,minute:0},{day:4,hour:21,minute:0}];
-const KNOCKOUT_SLOTS = {r16:{startDay:18,count:16},r8:{startDay:25,count:8},r4:{startDay:30,count:4},semi:{startDay:34,count:2},third:{startDay:37,count:1},final:{startDay:38,count:1}};
+const KNOCKOUT_SLOTS = {r16:{startDay:17,count:16},r8:{startDay:23,count:8},r4:{startDay:28,count:4},semi:{startDay:33,count:2},third:{startDay:37,count:1},final:{startDay:38,count:1}};
 const SUPER_ADMIN_EMAILS = ['javier.sacramento.castells@gmail.com','sergioredalb@gmail.com','marioutebo05@gmail.com'];
 
 // ── STATE ──────────────────────────────────────────────────
@@ -731,10 +731,29 @@ function guessGroupFromTeams(h,a) { for(const [g,ts] of Object.entries(GRUPOS_WC
 
 function buildGroupSeedMatches() {
   const ms=[]; let n=1, vi=0;
-  Object.entries(GRUPOS_WC2026).forEach(([group,teams],gi)=>{
+  // Calendario oficial FIFA 2026 — horas en UTC
+  // Índice de partidos por grupo: J1[0v1], J1[2v3], J2[0v2], J2[3v1], J3[0v3], J3[1v2]
+  // Día 0 = 11 Jun 2026 (INAUGURAL_DATE). Las J3 son simultáneas dentro de cada grupo.
+  // Hora UTC → Hora CEST (España, verano): +2h
+  const GROUP_SCHEDULE = {
+    'A': [[0,19],[1,2],[5,22],[6,1],[14,19],[14,19]],   // J3: 25 Jun 21:00 CEST
+    'B': [[1,19],[2,19],[6,22],[7,1],[14,22],[14,22]],   // J3: 26 Jun 00:00 CEST
+    'C': [[2,22],[3,1],[7,19],[8,22],[15,19],[15,19]],   // J3: 26 Jun 21:00 CEST
+    'D': [[2,1],[3,4],[7,22],[8,1],[15,22],[15,22]],     // J3: 27 Jun 00:00 CEST
+    'E': [[3,17],[4,0],[8,19],[9,22],[15,19],[15,19]],   // J3: 26 Jun 21:00 CEST
+    'F': [[3,20],[4,3],[8,22],[9,1],[15,22],[15,22]],    // J3: 27 Jun 00:00 CEST
+    'G': [[4,19],[5,1],[9,19],[10,22],[16,19],[16,19]],  // J3: 27 Jun 21:00 CEST
+    'H': [[4,22],[5,19],[9,22],[10,1],[16,22],[16,22]],  // J3: 28 Jun 00:00 CEST
+    'I': [[5,22],[6,1],[10,19],[11,22],[16,19],[16,19]], // J3: 27 Jun 21:00 CEST
+    'J': [[6,19],[6,22],[11,19],[11,22],[16,22],[16,22]], // J3: 28 Jun 00:00 CEST
+    'K': [[7,0],[7,19],[11,22],[12,1],[16,19],[16,19]],  // J3: 27 Jun 21:00 CEST
+    'L': [[7,22],[8,1],[12,19],[12,22],[16,22],[16,22]]  // J3: 28 Jun 00:00 CEST
+  };
+  Object.entries(GRUPOS_WC2026).forEach(([group,teams])=>{
     [[0,1],[2,3],[0,2],[3,1],[0,3],[1,2]].forEach(([hi,ai],pi)=>{
-      const slot=GROUP_MATCH_SLOTS[pi], venue=getSeedVenueByIndex(vi++);
-      ms.push({id:`seed-g-${group}-${pi+1}`,_seed:true,number:n++,homeTeam:{name:TEAM_MAP[teams[hi]]||teams[hi]},awayTeam:{name:TEAM_MAP[teams[ai]]||teams[ai]},utcDate:makeUtcIso(gi+slot.day,slot.hour,slot.minute),status:'SCHEDULED',stage:'GROUP_STAGE',group:`GROUP_${group}`,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});
+      const [dayOffset, hour] = GROUP_SCHEDULE[group][pi];
+      const venue=getSeedVenueByIndex(vi++);
+      ms.push({id:`seed-g-${group}-${pi+1}`,_seed:true,number:n++,homeTeam:{name:TEAM_MAP[teams[hi]]||teams[hi]},awayTeam:{name:TEAM_MAP[teams[ai]]||teams[ai]},utcDate:makeUtcIso(dayOffset,hour,0),status:'SCHEDULED',stage:'GROUP_STAGE',group:`GROUP_${group}`,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});
     });
   });
   return ms;
@@ -742,7 +761,22 @@ function buildGroupSeedMatches() {
 function buildKnockoutSeedMatches() {
   const ms=[]; let vi=72;
   const push=(key,label,count,startDay)=>{
-    for(let i=0;i<count;i++){const venue=getSeedVenueByIndex(vi++);ms.push({id:`seed-${key}-${i+1}`,_seed:true,number:73+ms.length,homeTeam:{name:'TBD'},awayTeam:{name:'TBD'},utcDate:makeUtcIso(startDay+Math.floor(i/2),18+(i%2)*3,0),status:'SCHEDULED',stage:label,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});}
+    for(let i=0;i<count;i++){
+      const venue=getSeedVenueByIndex(vi++);
+      let dayOffset;
+      if (key === 'r16') {
+        dayOffset = startDay + Math.floor(i / 3);
+      } else if (key === 'r8') {
+        dayOffset = startDay + Math.floor(i / 2);
+      } else if (key === 'r4') {
+        dayOffset = startDay + Math.floor(i / 2);
+      } else if (key === 'semi') {
+        dayOffset = startDay + i;
+      } else {
+        dayOffset = startDay;
+      }
+      ms.push({id:`seed-${key}-${i+1}`,_seed:true,number:73+ms.length,homeTeam:{name:'TBD'},awayTeam:{name:'TBD'},utcDate:makeUtcIso(dayOffset,18+(i%2)*3,0),status:'SCHEDULED',stage:label,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});
+    }
   };
   push('r16','LAST_32',KNOCKOUT_SLOTS.r16.count,KNOCKOUT_SLOTS.r16.startDay);
   push('r8','LAST_16',KNOCKOUT_SLOTS.r8.count,KNOCKOUT_SLOTS.r8.startDay);
