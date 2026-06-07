@@ -784,9 +784,7 @@ async function refreshMatches() { await loadMatches(true); renderResults(); }
 async function autoSyncFromMatches() {
   let changed=false;
   const finished=matches.filter(m=>m.status==='FINISHED'&&m.score?.fullTime?.home!=null);
-  const teamsIn=new Set();
-  finished.filter(m=>m.stage==='GROUP_STAGE').forEach(m=>{[nameES(m.homeTeam?.name||''),nameES(m.awayTeam?.name||'')].forEach(t=>{if(ALL_TEAMS.includes(t))teamsIn.add(t);});});
-  const tally={}; teamsIn.forEach(t=>{tally[t]={pg:0,pe:0,pd:0};});
+  const tally={}; ALL_TEAMS.forEach(t=>{tally[t]={pg:0,pe:0,pd:0};});
   finished.filter(m=>m.stage==='GROUP_STAGE').forEach(m=>{
     const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');
     if(!ALL_TEAMS.includes(h)||!ALL_TEAMS.includes(a))return;
