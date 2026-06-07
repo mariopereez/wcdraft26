@@ -1976,6 +1976,9 @@ function updateNotificationSettingsUI() {
       }
       summaryEl.style.color = 'var(--white)';
     }
+
+    // Registrar suscripción de push
+    if (typeof subscribeUserToPush === 'function') subscribeUserToPush();
   }
 }
 
@@ -1986,6 +1989,7 @@ async function requestNotificationPermission() {
     updateNotificationSettingsUI();
     if (permission === 'granted') {
       saveNotificationSettings();
+      if (typeof subscribeUserToPush === 'function') subscribeUserToPush();
     }
   } catch(e) {
     console.error("Error requesting permission", e);
@@ -2018,6 +2022,44 @@ async function saveNotificationSettings() {
     }
   }
 }
+
+async function subscribeUserToPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const publicVapidKey = "Yv0MJ-7hh85BN23Md2iQEMHIo6M80ByBwOTaJ7m6Geo";
+    if (!publicVapidKey || publicVapidKey.includes("TU_CLAVE_PUBLICA_VAPID")) return;
+
+    const convertedKey = urlBase64ToUint8Array(publicVapidKey);
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: convertedKey
+    });
+
+    if (currentUser && window._setDoc && window._doc && window._db) {
+      await window._setDoc(
+        window._doc(window._db, 'usuarios', currentUser.uid),
+        { pushSubscription: JSON.parse(JSON.stringify(subscription)) },
+        { merge: true }
+      );
+      console.log("PushSubscription guardada en Firestore.");
+    }
+  } catch(e) {
+    console.error("Error al registrar PushSubscription:", e);
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 
 
 // ── PLAYER CARD (Canvas) ───────────────────────────────────
