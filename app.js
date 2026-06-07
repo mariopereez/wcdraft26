@@ -59,7 +59,7 @@ const BRACKET_ROUNDS = [
 ];
 const GRUPOS_WC2026 = {
   "A":["México","Sudáfrica","Corea del Sur","República Checa"],
-  "B":["Canadá","Catar","Suiza","Bosnia y Herzegovina"],
+  "B":["Canadá","Bosnia y Herzegovina","Catar","Suiza"],
   "C":["Brasil","Marruecos","Haití","Escocia"],
   "D":["Estados Unidos","Paraguay","Australia","Turquía"],
   "E":["Alemania","Curazao","Costa de Marfil","Ecuador"],
@@ -934,38 +934,27 @@ function guessGroupFromTeams(h,a) { for(const [g,ts] of Object.entries(GRUPOS_WC
 
 function buildGroupSeedMatches() {
   const ms=[]; let n=1, vi=0;
-  const dayMaps = [
-    [0, 1, 6, 7, 13, 13], // A
-    [1, 2, 7, 8, 13, 13], // B
-    [2, 3, 8, 9, 14, 14], // C
-    [2, 3, 8, 9, 14, 14], // D
-    [3, 4, 9, 10, 14, 14], // E
-    [4, 4, 10, 10, 15, 15], // F
-    [4, 5, 10, 11, 15, 15], // G
-    [5, 5, 11, 11, 15, 15], // H
-    [5, 6, 11, 12, 16, 16], // I
-    [6, 6, 12, 12, 16, 16], // J
-    [6, 7, 12, 13, 16, 16], // K
-    [7, 7, 13, 13, 16, 16]  // L
-  ];
-  const hourMaps = [
-    [19, 22, 19, 22, 20, 20], // A
-    [19, 22, 19, 22, 23, 23], // B
-    [19, 22, 19, 22, 20, 20], // C
-    [19, 22, 19, 22, 23, 23], // D
-    [19, 22, 19, 22, 20, 20], // E
-    [19, 22, 19, 22, 23, 23], // F
-    [19, 22, 19, 22, 20, 20], // G
-    [19, 22, 19, 22, 23, 23], // H
-    [19, 22, 19, 22, 20, 20], // I
-    [19, 22, 19, 22, 23, 23], // J
-    [19, 22, 19, 22, 20, 20], // K
-    [19, 22, 19, 22, 23, 23]  // L
-  ];
-  Object.entries(GRUPOS_WC2026).forEach(([group,teams],gi)=>{
+  // Calendario oficial FIFA 2026 — horas en UTC
+  // Índice de partidos por grupo: J1[0v1], J1[2v3], J2[0v2], J2[3v1], J3[0v3], J3[1v2]
+  // Día 0 = 11 Jun 2026 (INAUGURAL_DATE). Las J3 son simultáneas dentro de cada grupo.
+  // Hora UTC → Hora CEST (España, verano): +2h
+  const GROUP_SCHEDULE = {
+    'A': [[0,19],[1,2],[5,22],[6,1],[14,19],[14,19]],   // J3: 25 Jun 21:00 CEST
+    'B': [[1,19],[2,19],[6,22],[7,1],[14,22],[14,22]],   // J3: 26 Jun 00:00 CEST
+    'C': [[2,22],[3,1],[7,19],[8,22],[15,19],[15,19]],   // J3: 26 Jun 21:00 CEST
+    'D': [[2,1],[3,4],[7,22],[8,1],[15,22],[15,22]],     // J3: 27 Jun 00:00 CEST
+    'E': [[3,17],[4,0],[8,19],[9,22],[15,19],[15,19]],   // J3: 26 Jun 21:00 CEST
+    'F': [[3,20],[4,3],[8,22],[9,1],[15,22],[15,22]],    // J3: 27 Jun 00:00 CEST
+    'G': [[4,19],[5,1],[9,19],[10,22],[16,19],[16,19]],  // J3: 27 Jun 21:00 CEST
+    'H': [[4,22],[5,19],[9,22],[10,1],[16,22],[16,22]],  // J3: 28 Jun 00:00 CEST
+    'I': [[5,22],[6,1],[10,19],[11,22],[16,19],[16,19]], // J3: 27 Jun 21:00 CEST
+    'J': [[6,19],[6,22],[11,19],[11,22],[16,22],[16,22]], // J3: 28 Jun 00:00 CEST
+    'K': [[7,0],[7,19],[11,22],[12,1],[16,19],[16,19]],  // J3: 27 Jun 21:00 CEST
+    'L': [[7,22],[8,1],[12,19],[12,22],[16,22],[16,22]]  // J3: 28 Jun 00:00 CEST
+  };
+  Object.entries(GRUPOS_WC2026).forEach(([group,teams])=>{
     [[0,1],[2,3],[0,2],[3,1],[0,3],[1,2]].forEach(([hi,ai],pi)=>{
-      const dayOffset = dayMaps[gi][pi];
-      const hour = hourMaps[gi][pi];
+      const [dayOffset, hour] = GROUP_SCHEDULE[group][pi];
       const venue=getSeedVenueByIndex(vi++);
       ms.push({id:`seed-g-${group}-${pi+1}`,_seed:true,number:n++,homeTeam:{name:TEAM_MAP[teams[hi]]||teams[hi]},awayTeam:{name:TEAM_MAP[teams[ai]]||teams[ai]},utcDate:makeUtcIso(dayOffset,hour,0),status:'SCHEDULED',stage:'GROUP_STAGE',group:`GROUP_${group}`,venue:venue.key,score:{winner:null,fullTime:{home:null,away:null}}});
     });
