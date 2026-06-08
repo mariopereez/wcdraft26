@@ -133,6 +133,22 @@ async function doInstallApp() {
   }
 }
 
+window.doIOSShare = async function() {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Draft 2026',
+        text: '¡Únete al Draft 2026!',
+        url: window.location.href
+      });
+    } catch (err) {
+      console.log('Error compartiendo:', err);
+    }
+  } else {
+    alert('Tu navegador no soporta esta función directamente. Pulsa el botón de Compartir en la barra inferior de tu navegador.');
+  }
+};
+
 // ── SUPERCELL TIPS & ROTATION ──────────────────────────────
 const SUPERCELL_TIPS = [
   "Consejo: Piensa bien en qué ronda colocas tus multiplicadores. Un ×3.0 en la final puede cambiarlo todo.",
@@ -1871,7 +1887,7 @@ const myTeamsList = draft[myDraftKey] || [];
   } else if (deferredPrompt) {
     pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.6rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4">Mejora tu experiencia añadiendo Draft 2026 a tu pantalla de inicio. Funcionará a pantalla completa y más rápido.</div><button class="btn btn-gold btn-sm" onclick="doInstallApp()" style="margin-top:.4rem;padding:.6rem;font-size:1rem;font-family:'Bebas Neue';letter-spacing:1px">🚀 Instalar App</button></div>`;
   } else if (isIOS) {
-    pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.6rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4">Para una experiencia óptima:</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;background:rgba(255,255,255,0.05);padding:.8rem;border-radius:8px;display:flex;align-items:center;gap:.6rem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><div>Pulsa el botón de <b>Compartir</b> y luego <b>"Añadir a pantalla de inicio"</b></div></div></div>`;
+    pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.6rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4">Para una experiencia óptima, instálala en tu móvil:</div><button class="btn btn-outline btn-sm" onclick="doIOSShare()" style="margin-top:.2rem;padding:.6rem;font-size:1rem;font-family:'Bebas Neue';letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:.4rem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Pulsa aquí para instalar</button><div style="font-size:.8rem;color:var(--muted2);text-align:center;margin-top:.2rem">Se abrirá el menú de tu móvil. Busca y pulsa <b>"Añadir a pantalla de inicio"</b> ➕</div></div>`;
   } else {
     pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;margin-top:.4rem">Para mejor experiencia, abre esta web en tu navegador móvil (Chrome/Safari) e instálala en la pantalla de inicio.</div></div>`;
   }
