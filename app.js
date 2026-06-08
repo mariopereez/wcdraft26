@@ -337,6 +337,24 @@ async function doChangeNickname() {
   const btn = document.getElementById('nickname-save-btn'); if(btn) { btn.disabled=true; btn.textContent='Guardando…'; }
   try {
     const oldName = currentProfile?.displayName;
+    
+    // Check for active drafts BEFORE saving anything
+    const snap = await window._getDoc(window._doc(window._db, 'usuarios', currentUser.uid));
+    let userData = null;
+    if(snap.exists()) {
+      userData = snap.data();
+      const misPartidas = userData.partidas || {};
+      for(const partidaId of Object.keys(misPartidas)) {
+        try {
+          const dsSnap = await window._getDoc(window._doc(window._db, `partidas/${partidaId}/draftState`, 'data'));
+          if(dsSnap.exists() && dsSnap.data().phase === 'active') {
+            showMsg('nickname-msg','error','Hay un draft activo en curso. No puedes cambiar tu apodo ahora.');
+            return;
+          }
+        } catch(e) {}
+      }
+    }
+
     await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid), {displayName:newName}, {merge:true});
     await window._updateProfile(currentUser, {displayName:newName});
     
@@ -349,9 +367,7 @@ async function doChangeNickname() {
       }
       
       // Sync nickname in database
-      const snap = await window._getDoc(window._doc(window._db, 'usuarios', currentUser.uid));
-      if(snap.exists()) {
-        const userData = snap.data();
+      if(userData) {
         const misPartidas = userData.partidas || {};
         for(const partidaId of Object.keys(misPartidas)) {
           try {
@@ -379,6 +395,25 @@ async function doChangeNickname() {
                 aData[newName] = aData[oldName];
                 delete aData[oldName];
                 await window._setDoc(avatarsRef, aData);
+              }
+            }
+            
+            // 4. Rename player in draftState
+            const dsRef = window._doc(window._db, `partidas/${partidaId}/draftState`, 'data');
+            const dsStateSnap = await window._getDoc(dsRef);
+            if(dsStateSnap.exists()) {
+              const dsData = dsStateSnap.data();
+              let dsUpdated = false;
+              if (dsData.orders && Array.isArray(dsData.orders)) {
+                dsData.orders.forEach(o => {
+                  if (o.player === oldName) {
+                    o.player = newName;
+                    dsUpdated = true;
+                  }
+                });
+              }
+              if (dsUpdated) {
+                await window._setDoc(dsRef, dsData);
               }
             }
           } catch(syncErr) {

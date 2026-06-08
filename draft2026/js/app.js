@@ -296,8 +296,93 @@ async function doChangeNickname() {
   if(newName.length>20)            { showMsg('nickname-msg','error','Máximo 20 caracteres'); return; }
   const btn = document.getElementById('nickname-save-btn'); if(btn) { btn.disabled=true; btn.textContent='Guardando…'; }
   try {
+    const oldName = currentProfile?.displayName;
+    
+    // Check for active drafts BEFORE saving anything
+    const snap = await window._getDoc(window._doc(window._db, 'usuarios', currentUser.uid));
+    let userData = null;
+    if(snap.exists()) {
+      userData = snap.data();
+      const misPartidas = userData.partidas || {};
+      for(const partidaId of Object.keys(misPartidas)) {
+        try {
+          const dsSnap = await window._getDoc(window._doc(window._db, `partidas/${partidaId}/draftState`, 'data'));
+          if(dsSnap.exists() && dsSnap.data().phase === 'active') {
+            showMsg('nickname-msg','error','Hay un draft activo en curso. No puedes cambiar tu apodo ahora.');
+            return;
+          }
+        } catch(e) {}
+      }
+    }
+
     await window._setDoc(window._doc(window._db,'usuarios',currentUser.uid), {displayName:newName}, {merge:true});
     await window._updateProfile(currentUser, {displayName:newName});
+    
+    if(oldName && oldName !== newName) {
+      // Sync nickname locally for avatar
+      const av = localStorage.getItem('avatar_' + oldName);
+      if(av) {
+        localStorage.setItem('avatar_' + newName, av);
+        avatarCache[newName] = av;
+      }
+      
+      // Sync nickname in database
+      if(userData) {
+        const misPartidas = userData.partidas || {};
+        for(const partidaId of Object.keys(misPartidas)) {
+          try {
+            // 1. Update name in jugadores
+            await window._setDoc(window._doc(window._db, `partidas/${partidaId}/jugadores`, currentUser.uid), {displayName:newName}, {merge:true});
+            
+            // 2. Rename key in draft
+            const draftRef = window._doc(window._db, `partidas/${partidaId}/draft`, 'data');
+            const dSnap = await window._getDoc(draftRef);
+            if(dSnap.exists()) {
+              const dData = dSnap.data();
+              if(dData[oldName] !== undefined) {
+                dData[newName] = dData[oldName];
+                delete dData[oldName];
+                await window._setDoc(draftRef, dData);
+              }
+            }
+            
+            // 3. Rename key in avatars
+            const avatarsRef = window._doc(window._db, `partidas/${partidaId}/avatars`, 'data');
+            const aSnap = await window._getDoc(avatarsRef);
+            if(aSnap.exists()) {
+              const aData = aSnap.data();
+              if(aData[oldName] !== undefined) {
+                aData[newName] = aData[oldName];
+                delete aData[oldName];
+                await window._setDoc(avatarsRef, aData);
+              }
+            }
+            
+            // 4. Rename player in draftState
+            const dsRef = window._doc(window._db, `partidas/${partidaId}/draftState`, 'data');
+            const dsStateSnap = await window._getDoc(dsRef);
+            if(dsStateSnap.exists()) {
+              const dsData = dsStateSnap.data();
+              let dsUpdated = false;
+              if (dsData.orders && Array.isArray(dsData.orders)) {
+                dsData.orders.forEach(o => {
+                  if (o.player === oldName) {
+                    o.player = newName;
+                    dsUpdated = true;
+                  }
+                });
+              }
+              if (dsUpdated) {
+                await window._setDoc(dsRef, dsData);
+              }
+            }
+          } catch(syncErr) {
+            console.error('Error sincronizando apodo en torneo ' + partidaId, syncErr);
+          }
+        }
+      }
+    }
+    
     if(currentProfile) currentProfile.displayName = newName;
     localStorage.setItem('profile_'+currentUser.uid, JSON.stringify({...currentProfile, displayName:newName}));
     const navN = document.getElementById('nav-name'); if(navN) navN.textContent = newName;
