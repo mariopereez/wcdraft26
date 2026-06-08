@@ -219,7 +219,14 @@ function findMyDraftKey(myName) {
 function getOwnerData(team) { for(const p of PARTICIPANTES) { const i = (draft[p]||[]).indexOf(team); if(i >= 0) return {owner:p, idx:i}; } return null; }
 function isSuperAdmin() { return currentUser && SUPER_ADMIN_EMAILS.includes(currentUser.email); }
 function isAdmin() { return (currentPartidaConfig && currentUser && currentPartidaConfig.adminUid === currentUser.uid) || isSuperAdmin(); }
-function getCurrentPlayerName() { return window._demoMode ? 'Tú (Demo)' : (currentProfile?.displayName || '—'); }
+function getCurrentPlayerName() {
+  if (window._demoMode) return 'Tú (Demo)';
+  if (typeof currentUser !== 'undefined' && currentUser && typeof currentPartidaJugadores !== 'undefined' && currentPartidaJugadores[currentUser.uid]) {
+    const j = currentPartidaJugadores[currentUser.uid];
+    return j.displayName || j.email || '—';
+  }
+  return typeof currentProfile !== 'undefined' && currentProfile ? (currentProfile.displayName || currentProfile.email || '—') : '—';
+}
 
 // ── AVATAR HELPERS ─────────────────────────────────────────
 function getAvatar(name) { return avatarCache[name] || localStorage.getItem('avatar_'+name) || null; }
