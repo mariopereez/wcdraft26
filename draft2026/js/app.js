@@ -18,7 +18,7 @@ document.addEventListener('gesturestart', function (event) {
 const FOOTBALL_API_URL = 'https://api.football-data.org/v4/competitions/WC/matches';
 const FOOTBALL_DATA_TOKEN_KEY = 'mundial_fd_token_2026';
 const CACHE_TTL = 10 * 60 * 1000;
-const INAUGURAL_DATE = new Date('2026-06-11T18:00:00Z');
+const INAUGURAL_DATE = new Date('2026-06-11T19:00:00Z');
 const INAUGURAL_LABEL = 'México vs Sudáfrica · 11 Jun 2026';
 
 const ALL_MULTS_CONFIG = {
@@ -51,9 +51,9 @@ const KNOCKOUT_STAGE_ALIASES = {
   third:['THIRD_PLACE']
 };
 const BRACKET_ROUNDS = [
-  { key:'r16',  label:'Dieciseisavos', slots:16 },
-  { key:'r8',   label:'Octavos',       slots:8  },
-  { key:'r4',   label:'Cuartos',       slots:4  },
+  { key:'r16',  label:'R32', slots:16 },
+  { key:'r8',   label:'R16',       slots:8  },
+  { key:'r4',   label:'Quarter finals',       slots:4  },
   { key:'semi', label:'Semis',         slots:2  },
   { key:'final',label:'Final',         slots:1  }
 ];
@@ -1653,7 +1653,7 @@ function getTeamMatches(t) { return matches.filter(m=>{const h=nameES(m.homeTeam
 function renderResults() {
   const myTeamSet=getMyTeams();
   const banner=document.getElementById('res-admin-banner');
-  if(banner) banner.innerHTML=`<div style="background:rgba(74,85,104,.1);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';margin-bottom:.7rem">👁️ Los resultados son actualizados por la organización en tiempo real</div>`;
+  if(banner) banner.innerHTML='';
   if(resTabActive==='todos'){renderTodosMatches();return;}
   if(resTabActive==='eliminatoria'){renderBracket();return;}
   document.getElementById('res-grupos-filters').style.display='flex';
@@ -1832,10 +1832,10 @@ function renderAdminKnockout(cont) {
   const knockout = adminMatchesData.knockout || {};
   if (!adminMatchesData.knockout) adminMatchesData.knockout = {};
   const rounds = [
-    { key: 'r16', label: '🏟️ DIECISEISAVOS', count: 16 },
+    { key: 'r16', label: '🏟️ R32', count: 16 },
     { key: 'r8', label: '🏟️ OCTAVOS DE FINAL', count: 8 },
     { key: 'r4', label: '🏟️ CUARTOS DE FINAL', count: 4 },
-    { key: 'semi', label: '🏟️ SEMIFINALES', count: 2 },
+    { key: 'semi', label: '🏟️ SEMI FINALS', count: 2 },
     { key: 'third', label: '🥉 TERCER PUESTO', count: 1 },
     { key: 'final', label: '🏆 GRAN FINAL', count: 1 }
   ];
@@ -1981,8 +1981,8 @@ const myTeamsList = draft[myDraftKey] || [];
   } else {
     pwaSection = `<div class="section-title">📱 <span class="accent">${window.tr("yo_app_title")}</span> ${window.tr("yo_app_mobile")}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">${window.tr("yo_app_install_title")}</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;margin-top:.4rem">${window.tr("yo_app_install_desc3")}</div></div>`;
   }
-  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">${window.tr("yo_card")}</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div>
-     <div class="yo-stat"><div class="v">${myScore.porras||0}</div><div class="l">${window.tr("porra_pts_label")}</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">${window.tr("yo_no_teams")}</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
+  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">${window.tr('yo_hero_pos')||'Position'} #${myRank} ${window.tr('yo_hero_of')||'of'} ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">${window.tr("yo_card")}</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div>
+     <div class="yo-stat"><div class="v">${myScore.porras||0}</div><div class="l">${window.tr("porra_pts_label")}</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">${window.tr('yo_stats_grp')||'Grupos'}: ${grp} · ${window.tr('yo_stats_elim')||'Elim'}: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">${window.tr('yo_no_elim_progress')||'No elimination progress yet'}</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">${window.tr("yo_no_teams")}</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
 
 <div class="section-title"><span class="accent" data-i18n="yo_acc_accent">${window.tr('yo_acc_accent')}</span> <span data-i18n="yo_acc_title">${window.tr('yo_acc_title')}</span></div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.5rem">
@@ -2094,7 +2094,7 @@ const myTeamsList = draft[myDraftKey] || [];
   </div>
 </div>
 
-<div class="section-title"><span class="accent">Mis</span> Rivales</div><div class="yo-rivals">${ranking.filter(r=>r.name!==myName).map(r=>{const diff=r.total-myScore.total,pos=ranking.findIndex(x=>x.name===r.name)+1;return `<div class="rival-card"><div style="display:flex;align-items:center;gap:.6rem">${avatarEl(r.name,'',36)}<div><div class="rival-name">${r.name} <span style="font-size:.7rem;color:var(--muted)">#${pos}</span></div><div class="rival-diff ${diff>0?'pos':'neg'}">${diff>0?'↑ '+diff+' pts por delante':'↓ '+Math.abs(diff)+' pts detrás'}</div></div></div><div class="rival-pts">${r.total}</div></div>`;}).join('')}</div>`;
+<div class="section-title"><span class="accent">${window.tr("yo_teams_accent")||"Mis"}</span> ${window.tr("yo_rivals")||"Rivales"}</div><div class="yo-rivals">${ranking.filter(r=>r.name!==myName).map(r=>{const diff=r.total-myScore.total,pos=ranking.findIndex(x=>x.name===r.name)+1;return `<div class="rival-card"><div style="display:flex;align-items:center;gap:.6rem">${avatarEl(r.name,'',36)}<div><div class="rival-name">${r.name} <span style="font-size:.7rem;color:var(--muted)">#${pos}</span></div><div class="rival-diff ${diff>0?'pos':'neg'}">${diff>0?'↑ '+diff+' pts por delante':'↓ '+Math.abs(diff)+' pts detrás'}</div></div></div><div class="rival-pts">${r.total}</div></div>`;}).join('')}</div>`;
   const simWrap=document.getElementById('yo-sim-wrap');if(simWrap)renderSimulator(simWrap);
   setTimeout(() => { if (typeof updateNotificationSettingsUI === 'function') updateNotificationSettingsUI(); }, 50);
 }
@@ -2193,7 +2193,7 @@ function updateNotificationSettingsUI() {
       if (saved.ranking !== false) active.push('🏆');
       if (saved.reminders !== false) active.push('⏰');
       if (active.length > 0) {
-        summaryEl.textContent = `Ajustes activos: ${active.join(' ')}`;
+        summaryEl.textContent = `${window.tr('yo_active_settings')||'Ajustes activos:'} ${active.join(' ')}`;
       } else {
         summaryEl.textContent = '${window.tr("yo_notif_disabled")}';
       }
@@ -2297,7 +2297,7 @@ function showPlayerCard() {
   ctx.font='48px serif';ctx.fillText('🏆',W-72,60);
   ctx.fillStyle='#f5c518';ctx.font='bold 13px Arial';let tx=28;for(const ch of 'MUNDIAL DRAFT 2026'){ctx.fillText(ch,tx,44);tx+=ctx.measureText(ch).width+2.5;}
   ctx.fillStyle='#eef2ff';ctx.font='bold 40px Arial';ctx.fillText(myName.toUpperCase(),28,96);
-  ctx.fillStyle='#7a8ba8';ctx.font='15px Arial';ctx.fillText(`Posición #${myRank} de ${PARTICIPANTES.length}`,28,122);
+  ctx.fillStyle='#7a8ba8';ctx.font='15px Arial';ctx.fillText((window.tr('yo_hero_pos')||'Position') + ' #' + myRank + ' ' + (window.tr('yo_hero_of')||'of') + ' ' + PARTICIPANTES.length,28,122);
   ctx.fillStyle='#f5c518';ctx.font='bold 50px Arial';ctx.fillText(`${myScore.total}`,28,185);
   ctx.fillStyle='#7a8ba8';ctx.font='17px Arial';ctx.fillText('PUNTOS TOTALES',28,208);
   ctx.strokeStyle='rgba(245,197,24,0.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(28,226);ctx.lineTo(W-28,226);ctx.stroke();
