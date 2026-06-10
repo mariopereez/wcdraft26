@@ -1018,6 +1018,7 @@ function setupPartidaListeners(partidaId) {
       adminMatchesData = s.data();
       matches = applyAdminDataToMatches(adminMatchesData);
       autoSyncFromMatches();
+      refreshCurrentPage();
       if (document.getElementById('page-admin')?.classList.contains('active')) renderAdminPanel();
     }
   });
@@ -1261,9 +1262,21 @@ async function autoSyncFromMatches() {
 function teamGroupPts(t)  { const r=results[t]||{}; return (r.pg||0)*3+(r.pe||0); }
 function teamElimRaw(t)   { const r=results[t]||{}; return (r.r16||0)*5+(r.r8||0)*8+(r.r4||0)*10+(r.semi||0)*11+(r.final||0)*12+(r.ganador||0)*10+(r.bronce||0)*5; }
 function calcP(p) {
-  let grp=0, elim=0;
+  let grp=0, elim=0, porra_pts=0;
   (draft[p]||[]).forEach((t,i)=>{if(!t)return; grp+=teamGroupPts(t); elim+=teamElimRaw(t)*(MULTS[i]||1);});
-  return {grp:Math.round(grp*10)/10, elim:Math.round(elim*10)/10, total:Math.round((grp+elim)*10)/10};
+
+  const uid = Object.keys(PARTICIPANTES_BY_UID).find(k => PARTICIPANTES_BY_UID[k] === p);
+  const pData = (uid && typeof currentPartidaJugadores !== 'undefined' && currentPartidaJugadores[uid]) ? currentPartidaJugadores[uid].predicciones?.matches || {} : {};
+  Object.entries(pData).forEach(([mid, pred]) => {
+    const m = typeof matches !== 'undefined' ? matches.find(x => String(x.id) === String(mid)) : null;
+    if (m && m.status === 'FINISHED' && m.score?.fullTime?.home != null) {
+      if (m.score.fullTime.home === pred.h && m.score.fullTime.away === pred.a) {
+        porra_pts += 2;
+      }
+    }
+  });
+
+  return {grp:Math.round(grp*10)/10, elim:Math.round(elim*10)/10, porras: porra_pts, total:Math.round((grp+elim+porra_pts)*10)/10};
 }
 function getRanking() { return PARTICIPANTES.map(p=>({name:p,...calcP(p)})).sort((a,b)=>b.total-a.total); }
 // ── RENDER: HOME ───────────────────────────────────────────
