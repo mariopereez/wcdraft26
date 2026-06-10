@@ -1293,7 +1293,7 @@ function renderHome() {
   if(myStatusWrap) myStatusWrap.innerHTML = ''; // We won't use this separately anymore
 
   if(podiumWrap) {
-    let combinedHtml = `<div style="background:var(--surf2); border:1px solid var(--border); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-top:0.5rem">`;
+    let combinedHtml = `<div style="background:var(--surf2); border:1px solid var(--border); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-top:0.2rem">`;
 
     // 1. PODIUM
     if(ranking.length > 0) {
@@ -1307,7 +1307,7 @@ function renderHome() {
     }
 
     // Divider
-    combinedHtml += `<div style="height:1px; background:var(--border); margin:0 1.5rem"></div>`;
+    combinedHtml += `<div style="height:1px; background:var(--border); margin:0 1.2rem"></div>`;
 
     // 2. MY STATUS
     const myRankIdx = ranking.findIndex(r=>r.name===myName);
@@ -1318,16 +1318,16 @@ function renderHome() {
         const nextPlayer = ranking[myRankIdx - 1];
         const diff = Math.round((nextPlayer.total - myData.total)*10)/10;
         const pillText = window.tr("home_pts_diff").replace("{diff}", diff).replace("{name}", nextPlayer.name);
-        gapHtmlBlock = `<div style="text-align:center; margin-top:0.6rem"><div style="display:inline-block; background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.2); color:#e63946; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.75rem; font-family:'Barlow Condensed'; font-weight:700">${pillText}</div></div>`;
+        gapHtmlBlock = `<div style="text-align:center; margin-top:0.3rem"><div style="display:inline-block; background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.2); color:#e63946; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.75rem; font-family:'Barlow Condensed'; font-weight:700">${pillText}</div></div>`;
       } else if (ranking.length > 1) {
         const second = ranking[1];
         const diff = Math.round((myData.total - second.total)*10)/10;
         const pillText = `Le sacas ${diff} pts a ${second.name}`;
-        gapHtmlBlock = `<div style="text-align:center; margin-top:0.6rem"><div style="display:inline-block; background:rgba(46,196,182,0.1); border:1px solid rgba(46,196,182,0.2); color:var(--cyan); padding:0.3rem 0.8rem; border-radius:20px; font-size:0.75rem; font-family:'Barlow Condensed'; font-weight:700">${pillText}</div></div>`;
+        gapHtmlBlock = `<div style="text-align:center; margin-top:0.3rem"><div style="display:inline-block; background:rgba(46,196,182,0.1); border:1px solid rgba(46,196,182,0.2); color:var(--cyan); padding:0.3rem 0.8rem; border-radius:20px; font-size:0.75rem; font-family:'Barlow Condensed'; font-weight:700">${pillText}</div></div>`;
       }
 
       combinedHtml += `
-        <div style="padding:1.2rem 1rem; display:flex; justify-content:center; align-items:center; width:100%">
+        <div style="padding:0.8rem 1rem; display:flex; justify-content:center; align-items:center; width:100%">
           <div style="display:flex; align-items:center; gap:3rem">
               <div style="text-align:center">
                   <div style="font-family:'Barlow Condensed';font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${window.tr("home_your_pos")}</div>
@@ -2433,7 +2433,7 @@ window.renderPorraCardHtml = function() {
   const aVal = userPred ? userPred.a : '';
 
   return `
-  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.08) 0%, var(--surf2) 100%); border:1px solid rgba(230,183,17,0.4); border-radius:14px; padding:1.5rem 1.2rem; margin:0; box-shadow:0 4px 12px rgba(0,0,0,0.15)">
+  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.08) 0%, var(--surf2) 100%); border:1px solid rgba(230,183,17,0.4); border-radius:14px; padding:1rem 1rem; margin:0; box-shadow:0 4px 12px rgba(0,0,0,0.15)">
     
     <div style="text-align:center; margin-bottom:1.5rem">
         <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold);letter-spacing:1px">🔥 ${window.tr("porra_title")}</div>
