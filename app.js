@@ -2345,6 +2345,9 @@ window.savePrediccion = async function(mId) {
   const h = parseInt(hVal); const a = parseInt(aVal);
   if(isNaN(h) || isNaN(a)) { alert(window.tr('porra_invalid')); return; }
   
+  const msg = window.tr ? window.tr('porra_confirm') : '¿Estás seguro? Solo puedes guardar la predicción una vez.';
+  if(!confirm(msg)) return;
+  
   if(typeof window._authUser === 'undefined' || !window._authUser || typeof currentPartidaId === 'undefined' || !currentPartidaId) return;
   const docRef = window._doc(window._db, 'partidas', currentPartidaId, 'predicciones', window._authUser.uid);
   await window._setDoc(docRef, { matches: { [mId]: { h, a, ts: Date.now() } } }, { merge: true });
@@ -2354,7 +2357,7 @@ window.savePrediccion = async function(mId) {
 window.renderPorraCardHtml = function() {
   const m = window.getPartidoDelDia();
   if(!m) return '';
-  const isClosed = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED';
+  const isTimeClosed = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED';
   
   let userPred = null;
   if(typeof window._authUser !== 'undefined' && window._authUser && window._predicciones && window._predicciones[window._authUser.uid] && window._predicciones[window._authUser.uid].matches) {
@@ -2367,6 +2370,7 @@ window.renderPorraCardHtml = function() {
   const hImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.homeTeam?.name||'') : m.homeTeam?.name), 'md') : '';
   const aImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.awayTeam?.name||'') : m.awayTeam?.name), 'md') : '';
 
+  const isClosed = isTimeClosed || !!userPred;
   const hVal = userPred ? userPred.h : '';
   const aVal = userPred ? userPred.a : '';
 
@@ -2393,9 +2397,12 @@ window.renderPorraCardHtml = function() {
       </div>
     </div>
     
-    ${isClosed ? 
-      `<div style="text-align:center;font-family:'Barlow Condensed';font-weight:700;color:var(--muted)">${window.tr("porra_closed")}</div>` : 
-      `<button class="btn btn-gold" style="width:100%" onclick="window.savePrediccion('${m.id}')">${window.tr("porra_save")}</button>`
+    ${isTimeClosed ? 
+      `<div style="text-align:center;font-family:'Barlow Condensed';font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);padding:.8rem;border-radius:8px">${window.tr("porra_closed")}</div>` : 
+      (userPred ? 
+        `<div style="text-align:center;font-family:'Barlow Condensed';font-weight:700;color:var(--cyan);background:rgba(0, 255, 255, 0.05);padding:.8rem;border-radius:8px;border:1px solid rgba(0, 255, 255, 0.2)">✓ ${window.tr("porra_done")}</div>` :
+        `<button class="btn btn-gold" style="width:100%" onclick="window.savePrediccion('${m.id}')">${window.tr("porra_save")}</button>`
+      )
     }
   </div>`;
 };
@@ -2411,7 +2418,13 @@ window.renderSuperAdminPorraHtml = function() {
       <select id="super-admin-porra-select" style="flex:1; background:var(--surf2); color:var(--white); border:1px solid var(--border); border-radius:8px; padding:.5rem; font-family:'Barlow Condensed'">
         <option value="">-- Automático --</option>`;
         
-  matches.forEach(m => {
+  const sortedMatches = [...matches].sort((a,b) => {
+    const dA = a.utcDate ? new Date(a.utcDate).getTime() : 0;
+    const dB = b.utcDate ? new Date(b.utcDate).getTime() : 0;
+    if (dA === dB) return String(a.id).localeCompare(String(b.id));
+    return dA - dB;
+  });
+  sortedMatches.forEach(m => {
     const hName = typeof nameES !== 'undefined' ? nameES(m.homeTeam?.name||'') : m.homeTeam?.name;
     const aName = typeof nameES !== 'undefined' ? nameES(m.awayTeam?.name||'') : m.awayTeam?.name;
     const h = window.tr("country_" + hName) || hName;
