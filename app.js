@@ -164,10 +164,10 @@ async function doInstallApp() {
 // ── SUPERCELL TIPS & ROTATION ──────────────────────────────
 const SUPERCELL_TIPS = [
   "Consejo: Piensa bien en qué ronda colocas tus multiplicadores. Un ×3.0 en la final puede cambiarlo todo.",
-  "Consejo: Las selecciones favoritas suman muchos puntos en eliminatorias, pero ¡cuidado con las sorpresas!",
+  window.tr("tip_1"),
   "Consejo: Puedes cambiar tu apodo en el menú 'Yo' para que tus amigos te reconozcan mejor.",
   "Consejo: En la pestaña 'Grupos' puedes ver la clasificación en directo de cada grupo del Mundial.",
-  "Consejo: ¿Sabías que el tercer puesto también otorga puntos extra? Asegúrate de animar a tus selecciones.",
+  window.tr("tip_2"),
   "Consejo: El modo de draft de serpentina equilibra las cosas: quien elige último en la ronda 1 elige primero en la ronda 2.",
   "Consejo: Invita a más amigos compartiendo el código de invitación del torneo.",
   "Consejo: No pongas todos tus favoritos al inicio, el draft estratégico premia la paciencia."
@@ -1256,7 +1256,7 @@ function renderHome() {
       if(myRankIdx > 0) {
         const nextPlayer = ranking[myRankIdx - 1];
         const diff = Math.round((nextPlayer.total - myData.total)*10)/10;
-        gapHtml = `<div class="msc-gap">A ${diff} pts de ${nextPlayer.name}</div>`;
+        gapHtml = `<div class="msc-gap">${window.tr("home_pts_diff").replace("{diff}", diff).replace("{name}", nextPlayer.name)}</div>`;
       } else if (ranking.length > 1) {
         const second = ranking[1];
         const diff = Math.round((myData.total - second.total)*10)/10;
@@ -1265,7 +1265,7 @@ function renderHome() {
       myStatusWrap.innerHTML = `
         <div class="my-status-card">
           <div class="msc-info">
-            <div class="msc-label">Tu Posición</div>
+            <div class="msc-label">${window.tr("home_your_pos")}</div>
             <div class="msc-pos">${myRankIdx + 1}º</div>
             ${gapHtml}
           </div>
@@ -1325,7 +1325,7 @@ function renderHome() {
     myMatches = myMatches.slice(0, 2);
 
     let displayMatches = myMatches;
-    let sectionLabel = `<span class="accent">Próximos</span> de tus equipos`;
+    let sectionLabel = `<span class="accent">${window.tr("home_my_accent")}</span> ${window.tr("home_my_title")}`;
     
     // If no matches for the user, fallback to hot matches
     if(displayMatches.length === 0) {
@@ -1606,7 +1606,7 @@ function showDraftTimeline() {
   const ds=draftState; const myName=getCurrentPlayerName();
   if(!ds.orders||ds.currentPick===0){cont.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>Draft no iniciado</p></div>';wrap.style.display='block';return;}
   const done=ds.orders.slice(0,ds.currentPick); let lastRound=-1;
-  cont.innerHTML=`<div style="position:relative;padding-left:1.8rem"><div style="position:absolute;left:.6rem;top:.5rem;bottom:.5rem;width:2px;background:linear-gradient(180deg,var(--t1),var(--t2),var(--t3),var(--t4),var(--t5),var(--t6));opacity:.4"></div>`+done.map((o,i)=>{let sep='';if(o.round!==lastRound){lastRound=o.round;sep=`<div style="font-family:'Bebas Neue';font-size:.82rem;letter-spacing:2px;color:var(--muted);padding:.3rem 0 .2rem">RONDA ${o.round+1} <span style="color:${TIER_DARK[o.round]}">×${MULTS[o.round]||1}</span></div>`;}const team=draft[o.player]?.[o.round]||'—';const pts=team!=='—'?Math.round((teamGroupPts(team)+teamElimRaw(team)*(MULTS[o.round]||1))*10)/10:0;const alive=team!=='—'&&(results[team]?.r16||results[team]?.r8||results[team]?.r4||results[team]?.semi||results[team]?.final||results[team]?.ganador);return `${sep}<div style="position:relative;margin-bottom:.7rem"><div style="position:absolute;left:-1.25rem;top:.6rem;width:10px;height:10px;border-radius:50%;background:${TIER_DARK[o.round]};border:2px solid var(--bg)"></div><div style="background:var(--surface);border:1px solid ${isSamePlayer(o.player,myName)?'rgba(245,197,24,.3)':'var(--border)'};border-radius:11px;padding:.6rem .9rem;display:flex;align-items:center;gap:.7rem;${isSamePlayer(o.player,myName)?'background:rgba(245,197,24,.04)':''}"><div style="font-family:'Bebas Neue';font-size:1.2rem;color:var(--muted);min-width:22px">${i+1}</div>${avatarEl(o.player,'',26)}<div style="flex:1"><div style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700">${o.player} → ${team!=='—'?flagImg(team)+' ':''} ${team!=='—'?window.tr('country_'+team):''}</div><div style="font-size:.65rem;color:var(--muted);font-family:'Barlow Condensed'">Ronda ${o.round+1} · ×${MULTS[o.round]||1}</div>${alive?'<span style="font-size:.6rem;background:rgba(46,196,182,.12);color:var(--cyan);border-radius:6px;padding:.05rem .35rem;font-family:Barlow Condensed;font-weight:700">Sigue vivo</span>':pts>0?'<span style="font-size:.6rem;background:rgba(245,197,24,.1);color:var(--gold);border-radius:6px;padding:.05rem .35rem;font-family:Barlow Condensed;font-weight:700">Con puntos</span>':''}</div><div style="text-align:right"><div style="font-family:'Bebas Neue';font-size:1.2rem;color:var(--gold)">${pts>0?pts:'—'}</div><div style="font-size:.58rem;color:var(--muted);font-family:Barlow Condensed">pts</div></div></div></div>`;}).join('')+'</div>';
+  cont.innerHTML=`<div style="position:relative;padding-left:1.8rem"><div style="position:absolute;left:.6rem;top:.5rem;bottom:.5rem;width:2px;background:linear-gradient(180deg,var(--t1),var(--t2),var(--t3),var(--t4),var(--t5),var(--t6));opacity:.4"></div>`+done.map((o,i)=>{let sep='';if(o.round!==lastRound){lastRound=o.round;sep=`<div style="font-family:'Bebas Neue';font-size:.82rem;letter-spacing:2px;color:var(--muted);padding:.3rem 0 .2rem">${window.tr("draft_ronda").replace("{round}", o.round+1)} <span style="color:${TIER_DARK[o.round]}">×${MULTS[o.round]||1}</span></div>`;}const team=draft[o.player]?.[o.round]||'—';const pts=team!=='—'?Math.round((teamGroupPts(team)+teamElimRaw(team)*(MULTS[o.round]||1))*10)/10:0;const alive=team!=='—'&&(results[team]?.r16||results[team]?.r8||results[team]?.r4||results[team]?.semi||results[team]?.final||results[team]?.ganador);return `${sep}<div style="position:relative;margin-bottom:.7rem"><div style="position:absolute;left:-1.25rem;top:.6rem;width:10px;height:10px;border-radius:50%;background:${TIER_DARK[o.round]};border:2px solid var(--bg)"></div><div style="background:var(--surface);border:1px solid ${isSamePlayer(o.player,myName)?'rgba(245,197,24,.3)':'var(--border)'};border-radius:11px;padding:.6rem .9rem;display:flex;align-items:center;gap:.7rem;${isSamePlayer(o.player,myName)?'background:rgba(245,197,24,.04)':''}"><div style="font-family:'Bebas Neue';font-size:1.2rem;color:var(--muted);min-width:22px">${i+1}</div>${avatarEl(o.player,'',26)}<div style="flex:1"><div style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700">${o.player} → ${team!=='—'?flagImg(team)+' ':''} ${team!=='—'?window.tr('country_'+team):''}</div><div style="font-size:.65rem;color:var(--muted);font-family:'Barlow Condensed'">Ronda ${o.round+1} · ×${MULTS[o.round]||1}</div>${alive?'<span style="font-size:.6rem;background:rgba(46,196,182,.12);color:var(--cyan);border-radius:6px;padding:.05rem .35rem;font-family:Barlow Condensed;font-weight:700">${window.tr("draft_alive")}</span>':pts>0?'<span style="font-size:.6rem;background:rgba(245,197,24,.1);color:var(--gold);border-radius:6px;padding:.05rem .35rem;font-family:Barlow Condensed;font-weight:700">${window.tr("draft_with_pts")}</span>':''}</div><div style="text-align:right"><div style="font-family:'Bebas Neue';font-size:1.2rem;color:var(--gold)">${pts>0?pts:'—'}</div><div style="font-size:.58rem;color:var(--muted);font-family:Barlow Condensed">${window.tr("draft_pts")}</div></div></div></div>`;}).join('')+'</div>';
   wrap.style.display='block';
   const ord=document.getElementById('draft-order-area');if(ord)ord.style.display='none';
   const dm=document.querySelector('.draft-main');if(dm)dm.style.display='none';
