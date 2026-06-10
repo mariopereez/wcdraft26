@@ -3,7 +3,7 @@
 //  Soporte offline básico + cache de assets estáticos
 // ═══════════════════════════════════════════════════════
 
-const CACHE_NAME = 'draft2026-v5';
+const CACHE_NAME = 'draft2026-v7';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
