@@ -2433,7 +2433,7 @@ window.renderPorraCardHtml = function() {
   const aVal = userPred ? userPred.a : '';
 
   return `
-  <div style="background:var(--surf2); border:1px solid var(--border); border-radius:14px; padding:1.5rem 1.2rem; margin-top:1rem; margin-bottom:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.08) 0%, var(--surf2) 100%); border:1px solid rgba(230,183,17,0.4); border-radius:14px; padding:1.5rem 1.2rem; margin-top:0.5rem; margin-bottom:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.15)">
     
     <div style="text-align:center; margin-bottom:1.5rem">
         <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold);letter-spacing:1px">🔥 ${window.tr("porra_title")}</div>
@@ -2449,9 +2449,9 @@ window.renderPorraCardHtml = function() {
       </div>
 
       <div style="display:flex;align-items:center;gap:.5rem">
-        <input type="number" id="porra-h" value="${hVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surface);border:1px solid var(--border);color:var(--white);border-radius:8px">
-        <span style="font-family:'Barlow Condensed';color:var(--muted);font-weight:700">-</span>
-        <input type="number" id="porra-a" value="${aVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surface);border:1px solid var(--border);color:var(--white);border-radius:8px">
+        <input type="number" id="porra-h" value="${hVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surface);border:1px solid rgba(230,183,17,0.3);color:var(--white);border-radius:8px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.2)">
+        <span style="font-family:'Barlow Condensed';color:var(--gold);font-weight:700">-</span>
+        <input type="number" id="porra-a" value="${aVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surface);border:1px solid rgba(230,183,17,0.3);color:var(--white);border-radius:8px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.2)">
       </div>
       
       <!-- Away Team -->
