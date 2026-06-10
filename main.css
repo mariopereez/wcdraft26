@@ -1802,3 +1802,6 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
   background-color: #07090f;
 }
 
+
+
+@keyframes heartbeat { 0% { transform: translate(-50%, -50%) scale(1); } 14% { transform: translate(-50%, -50%) scale(1.15); } 28% { transform: translate(-50%, -50%) scale(1); } 42% { transform: translate(-50%, -50%) scale(1.15); } 70% { transform: translate(-50%, -50%) scale(1); } }
