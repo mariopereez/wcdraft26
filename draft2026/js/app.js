@@ -943,11 +943,18 @@ async function enterApp(partidaId) {
     if(window.unsubPreds) { window.unsubPreds(); window.unsubPreds = null; }
     window._predicciones = {};
     if(partidaId !== '__DEMO__') {
-      window.unsubPreds = window._onSnapshot(window._collection(window._db, 'partidas', partidaId, 'predicciones'), snap => {
+      window.unsubPreds = window._onSnapshot(window._collection(window._db, 'partidas', partidaId, 'jugadores'), snap => {
         window._predicciones = {};
-        snap.forEach(d => window._predicciones[d.id] = d.data());
+        currentPartidaJugadores = {};
+        snap.forEach(d => {
+          const data = d.data();
+          currentPartidaJugadores[d.id] = data;
+          if (data.predicciones) {
+            window._predicciones[d.id] = data.predicciones;
+          }
+        });
         if (typeof getRanking === 'function') {
-          try { renderHome(); renderYo(); renderSala(); } catch(e){}
+          try { renderHome(); renderYo(); renderClasificacion(); } catch(e){}
         }
       });
     }
@@ -2349,9 +2356,13 @@ window.savePrediccion = async function(mId) {
   if(!confirm(msg)) return;
   
   if(typeof window._authUser === 'undefined' || !window._authUser || typeof currentPartidaId === 'undefined' || !currentPartidaId) return;
-  const docRef = window._doc(window._db, 'partidas', currentPartidaId, 'predicciones', window._authUser.uid);
-  await window._setDoc(docRef, { matches: { [mId]: { h, a, ts: Date.now() } } }, { merge: true });
-  alert(window.tr('porra_saved'));
+  try {
+    const docRef = window._doc(window._db, 'partidas', currentPartidaId, 'jugadores', window._authUser.uid);
+    await window._setDoc(docRef, { predicciones: { matches: { [mId]: { h, a, ts: Date.now() } } } }, { merge: true });
+    alert(window.tr('porra_saved') || 'Predicción Guardada');
+  } catch (e) {
+    alert("Error de permisos en BD: " + e.message);
+  }
 };
 
 window.renderPorraCardHtml = function() {
