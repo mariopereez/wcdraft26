@@ -29,6 +29,8 @@ window.translations = {
     yo_teams_accent: "Mis",
     yo_teams_title: "Selecciones",
     install_app: "Instalar App",
+ 
+    bracket_tbd: "Por determinar",
  nav_home: "Inicio", nav_draft: "Draft", nav_matches: "Partidos", nav_groups: "Grupos", nav_table: "Clasificación", nav_predictions: "Predicciones", nav_me: "Yo", nav_rules: "Reglas", nav_admin: "⚙ Admin", nav_admin_badge: "SUPER ADMIN",
     profile_login_google: "Entrar con Google", profile_nickname_title: "Cambiar apodo", profile_language_title: "Idioma", profile_logout: "Cerrar sesión",
     draft_status_not_started: "Draft no iniciado", draft_pick_prefix: "Pick", draft_status_completed: "Completado", draft_start_btn: "Iniciar Draft", btn_reset_draft: "Reiniciar Draft", btn_random: "Asignar Aleatorio", btn_test: "Modo Pruebas", btn_exit_test: "Salir Pruebas",
@@ -85,6 +87,8 @@ window.translations = {
     yo_teams_accent: "My",
     yo_teams_title: "Teams",
     install_app: "Install App",
+ 
+    bracket_tbd: "TBD",
  nav_home: "Home", nav_draft: "Draft", nav_matches: "Matches", nav_groups: "Groups", nav_table: "Standings", nav_predictions: "Predictions", nav_me: "Me", nav_rules: "Rules", nav_admin: "⚙ Admin", nav_admin_badge: "SUPER ADMIN",
     profile_login_google: "Login with Google", profile_nickname_title: "Change nickname", profile_language_title: "Language", profile_logout: "Logout",
     draft_status_not_started: "Draft not started", draft_pick_prefix: "Pick", draft_status_completed: "Completed", draft_start_btn: "Start Draft", btn_reset_draft: "Reset Draft", btn_random: "Assign Randomly", btn_test: "Test Mode", btn_exit_test: "Exit Test",
