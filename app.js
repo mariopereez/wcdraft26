@@ -2407,8 +2407,8 @@ window.renderPorraCardHtml = function() {
   const aVal = userPred ? userPred.a : '';
 
   return `
-  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.1) 0%, rgba(30,41,59,0) 100%), var(--surface);border:1px solid rgba(230,183,17,0.3);border-radius:13px;padding:1.2rem;margin-top:2.5rem; margin-bottom:2rem">
-    <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold);letter-spacing:1px;margin-bottom:.3rem">${window.tr("porra_title")}</div>
+  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.1) 0%, rgba(30,41,59,0) 100%), var(--surface);border:1px solid rgba(230,183,17,0.3);border-radius:13px;padding:1.2rem;margin-top:1.5rem; margin-bottom:1.5rem">
+    <div style="font-family:\'Bebas Neue\';font-size:1.2rem;color:var(--gold);letter-spacing:1px;margin-bottom:.3rem">${window.tr("porra_title")}</div>
     <div style="font-family:'Barlow Condensed';font-size:.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.3">${window.tr("porra_desc")}</div>
     
     <div style="display:flex;align-items:center;justify-content:center;gap:1rem;background:rgba(0,0,0,0.2);padding:1rem;border-radius:9px;margin-bottom:1rem">
@@ -2418,9 +2418,9 @@ window.renderPorraCardHtml = function() {
       </div>
       
       <div style="display:flex;align-items:center;gap:.5rem">
-        <input type="number" id="porra-h" value="${hVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surf2);border:1px solid var(--border);color:var(--white);border-radius:8px">
+        <input type="number" id="porra-h" value="${hVal}" ${isClosed?'disabled':''} style="width:40px;height:40px;text-align:center;font-family:\'Bebas Neue\';font-size:1.3rem;background:var(--surf2);border:1px solid var(--border);color:var(--white);border-radius:8px">
         <span style="font-family:'Barlow Condensed';color:var(--muted)">-</span>
-        <input type="number" id="porra-a" value="${aVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surf2);border:1px solid var(--border);color:var(--white);border-radius:8px">
+        <input type="number" id="porra-a" value="${aVal}" ${isClosed?'disabled':''} style="width:40px;height:40px;text-align:center;font-family:\'Bebas Neue\';font-size:1.3rem;background:var(--surf2);border:1px solid var(--border);color:var(--white);border-radius:8px">
       </div>
       
       <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;flex:1">
