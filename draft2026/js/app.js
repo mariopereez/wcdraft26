@@ -1940,7 +1940,15 @@ async function adminSaveAll() {
 }
 
 // ── RENDER: YO ─────────────────────────────────────────────
-const SIM_STAGES = [{value:'none',label:'Sin avance'},{value:'r16',label:'16avos (5 pts)'},{value:'r8',label:'Octavos (+8)'},{value:'r4',label:'Cuartos (+10)'},{value:'semi',label:'Semis (+11)'},{value:'final',label:'Finalista (+12)'},{value:'ganador',label:'🥇 Campeón (+10)'}];
+const SIM_STAGES = [
+  {value:'none',label:window.tr('sim_none')||'No advance'},
+  {value:'r16',label:(window.tr('sim_r16')||'R32')+' (5 pts)'},
+  {value:'r8',label:(window.tr('sim_r8')||'R16')+' (+8)'},
+  {value:'r4',label:(window.tr('sim_r4')||'Quarter finals')+' (+10)'},
+  {value:'semi',label:(window.tr('sim_semi')||'Semi finals')+' (+11)'},
+  {value:'final',label:(window.tr('sim_final')||'Finalist')+' (+12)'},
+  {value:'ganador',label:(window.tr('sim_winner')||'🥇 Winner')+' (+10)'}
+];
 const SIM_PTS    = {none:0,r16:5,r8:13,r4:23,semi:34,final:46,ganador:56};
 function getCurrentSimStage(t) { const r=results[t]||{};if(r.ganador)return'ganador';if(r.final)return'final';if(r.semi)return'semi';if(r.r4)return'r4';if(r.r8)return'r8';if(r.r16)return'r16';return'none'; }
 function calcSimTotal() {
