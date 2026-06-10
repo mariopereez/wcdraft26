@@ -2141,7 +2141,7 @@ const myTeamsList = draft[myDraftKey] || [];
   </div>
 </div>
 
-<div class="section-title"><span class="accent">${window.tr("yo_teams_accent")||"Mis"}</span> ${window.tr("yo_rivals")||"Rivales"}</div><div class="yo-rivals">${ranking.filter(r=>r.name!==myName).map(r=>{const diff=r.total-myScore.total,pos=ranking.findIndex(x=>x.name===r.name)+1;return `<div class="rival-card"><div style="display:flex;align-items:center;gap:.6rem">${avatarEl(r.name,'',36)}<div><div class="rival-name">${r.name} <span style="font-size:.7rem;color:var(--muted)">#${pos}</span></div><div class="rival-diff ${diff>0?'pos':'neg'}">${diff>0?'↑ '+diff+' pts por delante':'↓ '+Math.abs(diff)+' pts detrás'}</div></div></div><div class="rival-pts">${r.total}</div></div>`;}).join('')}</div>`;
+`;
   const simWrap=document.getElementById('yo-sim-wrap');if(simWrap)renderSimulator(simWrap);
   setTimeout(() => { if (typeof updateNotificationSettingsUI === 'function') updateNotificationSettingsUI(); }, 50);
 }
