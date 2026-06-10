@@ -608,7 +608,7 @@ function enterDemoMode() {
   window._demoMode = true;
   showScreen('app'); renderHome();
   const sb = document.getElementById('status-bar');
-  if(sb) { sb.className='warn'; sb.style.display='flex'; document.getElementById('status-text').textContent='👁️ MODO DEMO · Datos ficticios · Para salir ve a "← Mis torneos"'; }
+  if(sb) { sb.className='warn'; sb.style.display='flex'; document.getElementById('status-text').textContent='👁️ MODO DEMO · Datos ficticios · Para salir ve a "← ${window.tr("yo_my_tournaments")}"'; }
 }
 
 // ── LOBBY ──────────────────────────────────────────────────
@@ -1135,7 +1135,7 @@ function renderDraft() {
     document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel"><div class="draft-pick-label">🧪 Modo prueba</div><div style="width:100%"><div style="font-family:'Barlow Condensed';font-size:.7rem;color:var(--muted);text-transform:uppercase;margin-bottom:.45rem">1. Elige participante:</div><div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem">${PARTICIPANTES.map(p=>`<button onclick="setTestPlayer('${p}')" style="display:flex;align-items:center;gap:.25rem;padding:.25rem .55rem;border-radius:20px;font-family:'Barlow Condensed';font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid ${draftTestPlayer===p?'var(--gold)':'var(--border)'};background:${draftTestPlayer===p?'rgba(245,197,24,.12)':'var(--surf2)'};color:${draftTestPlayer===p?'var(--gold)':'var(--white)'}">${avatarEl(p,'',16)} ${p} (${(draft[p]||[]).filter(Boolean).length}/${sels})</button>`).join('')}</div>${draftTestPlayer?`<div id="draft-selected-team" style="font-family:'Bebas Neue';font-size:1rem;color:var(--gold);min-height:1.3rem;margin:.3rem 0"></div><button class="draft-confirm-btn" id="draft-confirm-btn" onclick="confirmTestPick()" disabled>Asignar</button>`:`<div style="font-size:.8rem;color:var(--muted2);font-family:Barlow Condensed">← Elige participante primero</div>`}</div></div>`;
     renderPicksLog(); return;
   }
-  if(ds.phase==='pending'){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">⚽</div><div class="draft-pick-name" style="font-size:1.6rem">${window.tr("draft_pending_title")}</div><div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?window.tr("draft_admin_start"):window.tr("draft_wait_admin")}</div></div>`;document.getElementById('draft-picks-log').innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">${window.tr("draft_no_picks")}</div>';return;}
+  if(ds.phase==='pending'){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">⚽</div><div class="draft-pick-name" style="font-size:1.6rem">${window.tr("draft_pending_title")}</div><div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?window.tr("draft_admin_start"):window.tr("draft_wait_admin")}</div></div>`;document.getElementById('draft-picks-log').innerHTML=`<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">${window.tr("draft_no_picks")}</div>`;return;}
   if(ds.phase==='complete'||ds.currentPick>=(ds.orders?.length||0)){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">🏆</div><div class="draft-pick-name">${window.tr("draft_completed_excl")}</div></div>`;renderPicksLog();return;}
   const pickIdx=ds.currentPick,cp=ds.orders[pickIdx];
   const isMyTurn=cp&&cp.player===myName; const rondaIdx=cp?cp.round:0;
@@ -1165,7 +1165,7 @@ async function confirmDraftPick() {
 function renderPicksLog() {
   const ds=draftState; const log=document.getElementById('draft-picks-log'); if(!log)return;
   const done=ds.orders?ds.orders.slice(0,ds.currentPick):[];
-  if(!done.length){log.innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">${window.tr("draft_no_picks")}</div>';return;}
+  if(!done.length){log.innerHTML=`<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">${window.tr("draft_no_picks")}</div>`;return;}
   const myName=getCurrentPlayerName(); const sels=currentPartidaConfig?.seleccionesPorJugador||6;
   const byPlayer={}; PARTICIPANTES.forEach(p=>{byPlayer[p]=[];});
   done.forEach(o=>{const team=draft[o.player]?.[o.round];if(team)byPlayer[o.player].push({team,round:o.round});});
@@ -1386,15 +1386,15 @@ const myTeamsList = draft[myDraftKey] || [];
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   let pwaSection = '';
   if (isStandalone) {
-    pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;text-align:center"><div style="font-size:1.5rem;margin-bottom:.4rem">✅</div><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">App instalada correctamente</div><div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">Gracias por usar la app nativa.</div></div>`;
+    pwaSection = `<div class="section-title">📱 <span class="accent">${window.tr("yo_app_title")}</span> ${window.tr("yo_app_mobile")}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;text-align:center"><div style="font-size:1.5rem;margin-bottom:.4rem">✅</div><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">${window.tr("yo_app_installed")}</div><div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">${window.tr("yo_app_installed_desc")}</div></div>`;
   } else if (deferredPrompt) {
-    pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.6rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4">Mejora tu experiencia añadiendo Draft 2026 a tu pantalla de inicio. Funcionará a pantalla completa y más rápido.</div><button class="btn btn-gold btn-sm" onclick="doInstallApp()" style="margin-top:.4rem;padding:.6rem;font-size:1rem;font-family:'Bebas Neue';letter-spacing:1px">🚀 Instalar App</button></div>`;
+    pwaSection = `<div class="section-title">📱 <span class="accent">${window.tr("yo_app_title")}</span> ${window.tr("yo_app_mobile")}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.6rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">${window.tr("yo_app_install_title")}</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4">${window.tr("yo_app_install_desc1")}</div><button class="btn btn-gold btn-sm" onclick="doInstallApp()" style="margin-top:.4rem;padding:.6rem;font-size:1rem;font-family:'Bebas Neue';letter-spacing:1px">${window.tr("yo_app_install_btn")}</button></div>`;
   } else if (isIOS) {
-    pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.6rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4">Para una experiencia óptima a pantalla completa:</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;background:rgba(255,255,255,0.05);padding:.8rem;border-radius:8px;display:flex;flex-direction:column;gap:.8rem"><div style="display:flex;gap:.5rem"><div style="font-weight:bold;color:var(--gold);font-family:'Bebas Neue';font-size:1.1rem">1.</div><div>Pulsa el botón de <b>Compartir</b> de tu navegador:<div style="font-size:.75rem;color:var(--muted2);margin-top:.3rem;line-height:1.5">• <b>Safari:</b> Abajo en el centro <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-bottom:2px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><br>• <b>Chrome:</b> Arriba a la derecha en el buscador</div></div></div><div style="display:flex;gap:.5rem"><div style="font-weight:bold;color:var(--gold);font-family:'Bebas Neue';font-size:1.1rem">2.</div><div>En el menú, baja y pulsa:<br><b style="color:var(--white)">"Añadir a pantalla de inicio"</b> ➕</div></div></div></div>`;
+    pwaSection = `<div class="section-title">📱 <span class="accent">${window.tr("yo_app_title")}</span> ${window.tr("yo_app_mobile")}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.6rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">${window.tr("yo_app_install_title")}</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4">${window.tr("yo_app_install_desc2")}</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;background:rgba(255,255,255,0.05);padding:.8rem;border-radius:8px;display:flex;flex-direction:column;gap:.8rem"><div style="display:flex;gap:.5rem"><div style="font-weight:bold;color:var(--gold);font-family:'Bebas Neue';font-size:1.1rem">1.</div><div>${window.tr("yo_app_install_step1")}<div style="font-size:.75rem;color:var(--muted2);margin-top:.3rem;line-height:1.5">• <b>Safari:</b> Abajo en el centro <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-bottom:2px"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><br>• <b>Chrome:</b> Arriba a la derecha en el buscador</div></div></div><div style="display:flex;gap:.5rem"><div style="font-weight:bold;color:var(--gold);font-family:'Bebas Neue';font-size:1.1rem">2.</div><div>${window.tr("yo_app_install_step2")}</div></div></div></div>`;
   } else {
-    pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;margin-top:.4rem">Para mejor experiencia, abre esta web en tu navegador móvil (Chrome/Safari) e instálala en la pantalla de inicio.</div></div>`;
+    pwaSection = `<div class="section-title">📱 <span class="accent">${window.tr("yo_app_title")}</span> ${window.tr("yo_app_mobile")}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">${window.tr("yo_app_install_title")}</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;margin-top:.4rem">${window.tr("yo_app_install_desc3")}</div></div>`;
   }
-  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">🃏 Tarjeta</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div></div><div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:.7rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><span style="font-family:'Barlow Condensed';font-size:.78rem;color:var(--muted)">Predicciones acertadas:</span><span style="font-family:'Bebas Neue';font-size:1.3rem;color:var(--gold)">${calcPredPts(myName)} pts</span></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">No tienes selecciones asignadas aún</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
+  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">${window.tr("yo_card")}</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div></div><div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:.7rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><span style="font-family:'Barlow Condensed';font-size:.78rem;color:var(--muted)">Predicciones acertadas:</span><span style="font-family:'Bebas Neue';font-size:1.3rem;color:var(--gold)">${calcPredPts(myName)} pts</span></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">No tienes selecciones asignadas aún</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
 
 <div class="section-title"><span class="accent" data-i18n="yo_acc_accent">${window.tr('yo_acc_accent')}</span> <span data-i18n="yo_acc_title">${window.tr('yo_acc_title')}</span></div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.5rem">
@@ -1408,22 +1408,22 @@ const myTeamsList = draft[myDraftKey] || [];
   </div>
   <div style="display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;border-bottom:1px solid rgba(42,54,80,.4);cursor:pointer" onclick="showChangeNickname()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-    <span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1">Cambiar apodo</span>
+    <span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1">${window.tr("yo_change_nick")}</span>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
   <div style="display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;border-bottom:1px solid rgba(42,54,80,.4);cursor:pointer" onclick="goBackToLobby()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1">Mis torneos</span>
+    <span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1">${window.tr("yo_my_tournaments")}</span>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
   <div style="display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;cursor:pointer" onclick="doLogout()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    <span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1;color:var(--red)">Cerrar sesión</span>
+    <span style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1;color:var(--red)">${window.tr("yo_logout")}</span>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
 </div>
 
-<div class="section-title">🔔 <span class="accent">Notificaciones</span></div>
+<div class="section-title">🔔 <span class="accent">${window.tr("yo_notifications")}</span></div>
 <div id="yo-notifications-container" style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:0;margin-bottom:1.5rem;font-family:'Barlow Condensed';overflow:hidden">
   
   <!-- Clickable Header to Toggle -->
@@ -1489,9 +1489,9 @@ const myTeamsList = draft[myDraftKey] || [];
     <!-- State 3: Denied Permission -->
     <div id="yo-push-denied" style="display:none;flex-direction:column;gap:.4rem;text-align:center;padding-bottom:1rem">
       <div style="font-size:1.2rem">⚠️</div>
-      <div style="font-size:.9rem;font-weight:700;color:var(--white)">Notificaciones bloqueadas</div>
+      <div style="font-size:.9rem;font-weight:700;color:var(--white)">${window.tr("yo_notif_blocked")}</div>
       <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
-        Has desactivado las notificaciones para esta web. Habilítalas en la configuración de tu navegador o dispositivo para no perderte nada.
+        ${window.tr("yo_notif_blocked_desc")}
       </div>
     </div>
 
@@ -1500,7 +1500,7 @@ const myTeamsList = draft[myDraftKey] || [];
       <div style="font-size:1.2rem">ℹ️</div>
       <div style="font-size:.9rem;font-weight:700;color:var(--white)">No soportado</div>
       <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
-        Tu navegador o dispositivo no soporta notificaciones push en este momento. Si estás en iOS, asegúrate de añadir la web a tu pantalla de inicio.
+        ${window.tr("yo_notif_unsupported")}
       </div>
     </div>
   </div>
@@ -1578,7 +1578,7 @@ function updateNotificationSettingsUI() {
   } else if (permission === 'default') {
     promptEl.style.display = 'flex';
     if (summaryEl) {
-      summaryEl.textContent = 'Habilitar notificaciones';
+      summaryEl.textContent = '${window.tr("yo_notif_enable")}';
       summaryEl.style.color = 'var(--white)';
     }
   } else if (permission === 'granted') {
@@ -1607,7 +1607,7 @@ function updateNotificationSettingsUI() {
       if (active.length > 0) {
         summaryEl.textContent = `Ajustes activos: ${active.join(' ')}`;
       } else {
-        summaryEl.textContent = 'Notificaciones desactivadas';
+        summaryEl.textContent = '${window.tr("yo_notif_disabled")}';
       }
       summaryEl.style.color = 'var(--white)';
     }
