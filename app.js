@@ -718,7 +718,7 @@ async function loadMisPartidas() {
       const estadoTxt   = config.estado==='activa'?'Activa':config.estado==='completada'?'Completada':'Esperando';
       return `<div class="partida-row" onclick="enterPartida('${id}')">
         <div class="partida-row-icon">${icon}</div>
-        <div class="partida-row-info"><div class="partida-row-name">${config.nombre}</div><div class="partida-row-meta">Código: <strong>${config.codigo||'—'}</strong> · ${config.jugadoresCount||1}/${config.maxJugadores} jugadores · ${config.seleccionesPorJugador} selecciones</div></div>
+        <div class="partida-row-info"><div class="partida-row-name">${config.nombre}</div><div class="partida-row-meta">${window.tr("lobby_code_label")}: <strong>${config.codigo||'—'}</strong> · ${config.jugadoresCount||1}/${config.maxJugadores} ${window.tr("lobby_players")} · ${config.seleccionesPorJugador} ${window.tr("lobby_picks")}</div></div>
         <div class="partida-row-badges"><span class="badge ${rol==='admin'?'badge-admin':'badge-jugador'}">${rol==='admin'?'Admin':'Jugador'}</span><span class="badge ${estadoBadge}">${estadoTxt}</span></div>
       </div>`;
     }).join('');
@@ -883,7 +883,7 @@ async function copyCodigo() {
 }
 async function sharePartida(codigo) {
   const url = window.location.origin + window.location.pathname + '?join=' + codigo;
-  const text = `¡Únete a mi Mundial Draft 2026! Código: ${codigo}\nEnlace: ${url}`;
+  const text = `¡Únete a mi Mundial Draft 2026! ${window.tr("lobby_code_label")}: ${codigo}\nEnlace: ${url}`;
   if(navigator.share) {
     try { await navigator.share({title:'Mundial Draft 2026', text}); return; } catch(e){}
   }
@@ -1486,7 +1486,7 @@ function renderDraft() {
   const avPanel=document.getElementById('draft-available-panel'),avGrid=document.getElementById('draft-avail-grid');
   if(draftTestMode||ds.phase==='active'||ds.phase==='complete'){
     if(avPanel) avPanel.style.display='block';
-    if(avGrid){const picked=getPickedTeams();avGrid.innerHTML=ALL_TEAMS.map(t=>{const p=picked.has(t);const od=getOwnerData(t);const clickable=!p&&(isMyTurnNow||(draftTestMode&&draftTestPlayer));const onclickAttr=clickable?(draftTestMode&&draftTestPlayer?`onclick="selectTestTeam('${t}')"`:` onclick="selectDraftTeam('${t}')"`):'';return `<div class="draft-avail-chip ${p?'picked':''} ${clickable?'clickable':''}" ${onclickAttr} title="${p&&od?od.owner:'Disponible'}">${flagImg(t)} ${t}${p&&od?`<span style="font-size:.52rem;color:${getPlayerColor(od.owner)};margin-left:.2rem">${od.owner}</span>`:''}</div>`;}).join('');}
+    if(avGrid){const picked=getPickedTeams();avGrid.innerHTML=ALL_TEAMS.map(t=>{const p=picked.has(t);const od=getOwnerData(t);const clickable=!p&&(isMyTurnNow||(draftTestMode&&draftTestPlayer));const onclickAttr=clickable?(draftTestMode&&draftTestPlayer?`onclick="selectTestTeam('${t}')"`:` onclick="selectDraftTeam('${t}')"`):'';return `<div class="draft-avail-chip ${p?'picked':''} ${clickable?'clickable':''}" ${onclickAttr} title="${p&&od?od.owner:'Disponible'}">${flagImg(t)} ${window.tr("country_" + t)}${p&&od?`<span style="font-size:.52rem;color:${getPlayerColor(od.owner)};margin-left:.2rem">${od.owner}</span>`:''}</div>`;}).join('');}
   }else if(avPanel) avPanel.style.display='none';
   if(draftTestMode){
     document.getElementById('draft-order-area').innerHTML='';
@@ -1495,15 +1495,15 @@ function renderDraft() {
   }
   if(ds.phase==='pending'){
     document.getElementById('draft-order-area').innerHTML='';
-    const btnShare = `<button class="btn btn-outline" style="margin-top:1rem;font-family:'Barlow Condensed';font-weight:700" onclick="sharePartida('${currentPartidaConfig.codigo}')">📤 Compartir enlace de invitación</button>`;
+    const btnShare = `<button class="btn btn-outline" style="margin-top:1rem;font-family:'Barlow Condensed';font-weight:700" onclick="sharePartida('${currentPartidaConfig.codigo}')">📤 ${window.tr("draft_share_link")}</button>`;
     document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center">
       <div style="font-size:2.5rem">⚽</div>
-      <div class="draft-pick-name" style="font-size:1.6rem">Draft pendiente</div>
-      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed;margin-bottom:.5rem">Código: <strong style="color:var(--gold);font-size:1.1rem">${currentPartidaConfig.codigo}</strong> · (${PARTICIPANTES.length}/${currentPartidaConfig.maxJugadores} jug.)</div>
-      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?'Inicia el draft cuando todos estén listos':'Esperando al admin…'}</div>
+      <div class="draft-pick-name" style="font-size:1.6rem">${window.tr("draft_pending_title")}</div>
+      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed;margin-bottom:.5rem">${window.tr("lobby_code_label")}: <strong style="color:var(--gold);font-size:1.1rem">${currentPartidaConfig.codigo}</strong> · (${PARTICIPANTES.length}/${currentPartidaConfig.maxJugadores} jug.)</div>
+      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?'${window.tr("draft_admin_start")}':'${window.tr("draft_wait_admin")}'}</div>
       ${isAdmin() ? btnShare : ''}
     </div>`;
-    document.getElementById('draft-picks-log').innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">Sin elecciones aún</div>';
+    document.getElementById('draft-picks-log').innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">${window.tr("draft_no_picks")}</div>';
     return;
   }
   if(ds.phase==='complete'||ds.currentPick>=(ds.orders?.length||0)){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">🏆</div><div class="draft-pick-name">¡DRAFT COMPLETADO!</div></div>`;renderPicksLog();return;}
@@ -1511,12 +1511,12 @@ function renderDraft() {
   const isMyTurn=cp&&isSamePlayer(cp.player, myName); const rondaIdx=cp?cp.round:0;
   const roundOrders=ds.orders.filter(o=>o.round===rondaIdx);
   const roundStart=ds.orders.findIndex(o=>o.round===rondaIdx);
-  document.getElementById('draft-order-area').innerHTML=`<div style="margin-bottom:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--muted)">RONDA ${rondaIdx+1} <span style="color:${TIER_DARK[rondaIdx]}">×${MULTS[rondaIdx]||1}</span> · ${window.tr("draft_pick_prefix")} ${pickIdx+1}/${ds.orders.length}</div><div class="draft-order-strip">${roundOrders.map((o,i)=>{const isCurr=i===(pickIdx-roundStart),isPast=i<(pickIdx-roundStart);const tp=draft[o.player]?.[rondaIdx];return `<div class="draft-order-slot ${isCurr?'current':''} ${isPast?'done':''}"><div class="draft-slot-num">${i+1}</div>${avatarEl(o.player,'',32)}<div class="draft-slot-name">${o.player}</div>${tp?`<div style="font-size:.58rem;color:var(--gold);text-align:center">${flagImg(tp)} ${tp}</div>`:`<div style="font-size:.58rem;color:var(--muted2)">pendiente</div>`}</div>`;}).join('')}</div>`;
+  document.getElementById('draft-order-area').innerHTML=`<div style="margin-bottom:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--muted)">RONDA ${rondaIdx+1} <span style="color:${TIER_DARK[rondaIdx]}">×${MULTS[rondaIdx]||1}</span> · ${window.tr("draft_pick_prefix")} ${pickIdx+1}/${ds.orders.length}</div><div class="draft-order-strip">${roundOrders.map((o,i)=>{const isCurr=i===(pickIdx-roundStart),isPast=i<(pickIdx-roundStart);const tp=draft[o.player]?.[rondaIdx];return `<div class="draft-order-slot ${isCurr?'current':''} ${isPast?'done':''}"><div class="draft-slot-num">${i+1}</div>${avatarEl(o.player,'',32)}<div class="draft-slot-name">${o.player}</div>${tp?`<div style="font-size:.58rem;color:var(--gold);text-align:center">${flagImg(tp)} ${window.tr("country_" + tp)}</div>`:`<div style="font-size:.58rem;color:var(--muted2)">${window.tr("draft_pending_pick")}</div>`}</div>`;}).join('')}</div>`;
   const pp=document.getElementById('draft-pick-area');
   if(isMyTurn){
     // ── FIX BUG 1: guardar selección previa ANTES de reconstruir el HTML ──
     const prevSel=draftSearchSel;
-    pp.innerHTML=`<div class="draft-pick-panel"><div class="draft-pick-label">✨ ¡ES TU TURNO!</div>${avatarEl(myName,'',80)}<div class="draft-pick-name">${myName}</div><div style="font-family:'Barlow Condensed';font-size:.9rem;color:var(--muted)">Ronda ${rondaIdx+1} · <span style="color:${TIER_DARK[rondaIdx]}">×${MULTS[rondaIdx]||1}</span></div><div style="width:100%"><input class="draft-team-search" type="text" placeholder="🔍 Buscar selección…" id="draft-search-inp" oninput="draftSearchFilter(this.value)" autocomplete="off"/><div class="draft-ac-list" id="draft-ac-list"></div></div><div id="draft-selected-team" style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold);min-height:1.6rem"></div><button class="draft-confirm-btn" id="draft-confirm-btn" onclick="confirmDraftPick()" disabled>Confirmar selección</button></div>`;
+    pp.innerHTML=`<div class="draft-pick-panel"><div class="draft-pick-label">${window.tr("draft_your_turn")}</div>${avatarEl(myName,'',80)}<div class="draft-pick-name">${myName}</div><div style="font-family:'Barlow Condensed';font-size:.9rem;color:var(--muted)">Ronda ${rondaIdx+1} · <span style="color:${TIER_DARK[rondaIdx]}">×${MULTS[rondaIdx]||1}</span></div><div style="width:100%"><input class="draft-team-search" type="text" placeholder="${window.tr("draft_search_placeholder")}" id="draft-search-inp" oninput="draftSearchFilter(this.value)" autocomplete="off"/><div class="draft-ac-list" id="draft-ac-list"></div></div><div id="draft-selected-team" style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold);min-height:1.6rem"></div><button class="draft-confirm-btn" id="draft-confirm-btn" onclick="confirmDraftPick()" disabled>${window.tr("draft_confirm_btn")}</button></div>`;
     draftSearchSel=null;
     if(prevSel){
       // Restaurar la selección previa: el jugador ya había elegido antes del re-render
@@ -1525,14 +1525,14 @@ function renderDraft() {
       draftSearchFilter('');
     }
   }
-  else{pp.innerHTML=`<div class="draft-pick-panel"><div class="draft-pick-label">Turno actual</div>${avatarEl(cp.player,'',80)}<div class="draft-pick-name">${cp.player}</div><div style="font-size:.82rem;color:var(--muted);font-family:'Barlow Condensed'">Esperando su elección…</div></div>`;}
+  else{pp.innerHTML=`<div class="draft-pick-panel"><div class="draft-pick-label">${window.tr("draft_current_turn")}</div>${avatarEl(cp.player,'',80)}<div class="draft-pick-name">${cp.player}</div><div style="font-size:.82rem;color:var(--muted);font-family:'Barlow Condensed'">${window.tr("draft_wait_pick")}</div></div>`;}
   renderPicksLog();
 }
 function setTestPlayer(p) { draftTestPlayer=p; draftSearchSel=null; renderDraft(); }
 function selectTestTeam(t) { draftSearchSel=t; const sd=document.getElementById('draft-selected-team');if(sd)sd.innerHTML=`${flagImg(t,'md')} ${t}`;const btn=document.getElementById('draft-confirm-btn');if(btn)btn.disabled=false; }
 function confirmTestPick() { if(!draftSearchSel||!draftTestPlayer)return;const sels=currentPartidaConfig?.seleccionesPorJugador||6;const idx=(draft[draftTestPlayer]||[]).findIndex(t=>!t);if(idx===-1){alert(`${draftTestPlayer} ya tiene ${sels} selecciones`);return;}draft[draftTestPlayer][idx]=draftSearchSel;draftTestPlayer=null;draftSearchSel=null;renderDraft(); }
-function draftSearchFilter(val) { const picked=getPickedTeams();const filtered=ALL_TEAMS.filter(t=>!picked.has(t)&&t.toLowerCase().includes(val.toLowerCase()));const list=document.getElementById('draft-ac-list');if(!list)return;if(!filtered.length){list.innerHTML='<div style="padding:.4rem .8rem;font-size:.82rem;color:var(--muted)">Sin resultados</div>';return;}list.innerHTML=filtered.slice(0,15).map(t=>`<div class="draft-ac-item" onclick="selectDraftTeam('${t}')">${flagImg(t)} ${t}</div>`).join(''); }
-function selectDraftTeam(team) { draftSearchSel=team;const inp=document.getElementById('draft-search-inp');if(inp)inp.value=team;const list=document.getElementById('draft-ac-list');if(list)list.innerHTML='';const sd=document.getElementById('draft-selected-team');if(sd)sd.innerHTML=`${flagImg(team,'md')} ${team}`;const btn=document.getElementById('draft-confirm-btn');if(btn)btn.disabled=false; }
+function draftSearchFilter(val) { const picked=getPickedTeams();const filtered=ALL_TEAMS.filter(t=>!picked.has(t)&&t.toLowerCase().includes(val.toLowerCase()));const list=document.getElementById('draft-ac-list');if(!list)return;if(!filtered.length){list.innerHTML='<div style="padding:.4rem .8rem;font-size:.82rem;color:var(--muted)">Sin resultados</div>';return;}list.innerHTML=filtered.slice(0,15).map(t=>`<div class="draft-ac-item" onclick="selectDraftTeam('${t}')">${flagImg(t)} ${window.tr("country_" + t)}</div>`).join(''); }
+function selectDraftTeam(team) { draftSearchSel=team;const inp=document.getElementById('draft-search-inp');if(inp)inp.value=team;const list=document.getElementById('draft-ac-list');if(list)list.innerHTML='';const sd=document.getElementById('draft-selected-team');if(sd)sd.innerHTML=`${flagImg(team,'md')} ${window.tr("country_" + team)}`;const btn=document.getElementById('draft-confirm-btn');if(btn)btn.disabled=false; }
 let _draftConfirming=false;
 async function confirmDraftPick() {
   if(_draftConfirming || !draftSearchSel) return;
@@ -1591,7 +1591,7 @@ async function confirmDraftPick() {
 function renderPicksLog() {
   const ds=draftState; const log=document.getElementById('draft-picks-log'); if(!log)return;
   const done=ds.orders?ds.orders.slice(0,ds.currentPick):[];
-  if(!done.length){log.innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">Sin elecciones aún</div>';return;}
+  if(!done.length){log.innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">${window.tr("draft_no_picks")}</div>';return;}
   const myName=getCurrentPlayerName(); const sels=currentPartidaConfig?.seleccionesPorJugador||6;
   const byPlayer={}; PARTICIPANTES.forEach(p=>{byPlayer[p]=[];});
   done.forEach(o=>{const team=draft[o.player]?.[o.round];if(team)byPlayer[o.player].push({team,round:o.round});});
