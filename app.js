@@ -932,6 +932,17 @@ async function enterApp(partidaId) {
     const cfgSnap = await window._getDoc(window._doc(window._db,'partidas',partidaId,'config','data'));
     if(!cfgSnap.exists()) throw new Error('Torneo no encontrado');
     currentPartidaConfig = cfgSnap.data();
+    if(window.unsubPreds) { window.unsubPreds(); window.unsubPreds = null; }
+    window._predicciones = {};
+    if(partidaId !== '__DEMO__') {
+      window.unsubPreds = window._onSnapshot(window._collection(window._db, 'partidas', partidaId, 'predicciones'), snap => {
+        window._predicciones = {};
+        snap.forEach(d => window._predicciones[d.id] = d.data());
+        if (typeof getRanking === 'function') {
+          try { renderHome(); renderYo(); renderSala(); } catch(e){}
+        }
+      });
+    }
     if(currentPartidaConfig.estado==='eliminada') { hideLoadingScreen(); alert('Este torneo ha sido eliminado.'); goBackToLobby(); return; }
     const jugSnap = await window._getDocs(window._collection(window._db,'partidas',partidaId,'jugadores'));
     currentPartidaJugadores = {}; jugSnap.forEach(d=>{currentPartidaJugadores[d.id]=d.data();});
@@ -1273,6 +1284,7 @@ function renderHome() {
             <div class="msc-pts">${myData.total}</div>
           </div>
         </div>`;
+      if(window.renderPorraCardHtml) myStatusWrap.innerHTML += window.renderPorraCardHtml();
     } else {
       myStatusWrap.innerHTML = '';
     }
@@ -1944,7 +1956,8 @@ const myTeamsList = draft[myDraftKey] || [];
   } else {
     pwaSection = `<div class="section-title">📱 <span class="accent">${window.tr("yo_app_title")}</span> ${window.tr("yo_app_mobile")}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">${window.tr("yo_app_install_title")}</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;margin-top:.4rem">${window.tr("yo_app_install_desc3")}</div></div>`;
   }
-  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">${window.tr("yo_card")}</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">${window.tr("yo_no_teams")}</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
+  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">${window.tr("yo_card")}</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div>
+     <div class="yo-stat"><div class="v">${myScore.porras||0}</div><div class="l">${window.tr("porra_pts_label")}</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">${window.tr("yo_no_teams")}</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
 
 <div class="section-title"><span class="accent" data-i18n="yo_acc_accent">${window.tr('yo_acc_accent')}</span> <span data-i18n="yo_acc_title">${window.tr('yo_acc_title')}</span></div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.5rem">
@@ -2280,3 +2293,87 @@ function showPlayerCard() {
 }
 function roundRect(ctx,x,y,w,h,r) { ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath(); }
 function downloadPlayerCard() { const canvas=document.getElementById('player-card-canvas');if(!canvas)return;const a=document.createElement('a');a.download=`draft2026_${getCurrentPlayerName()}.png`;a.href=canvas.toDataURL('image/png');a.click(); }
+
+
+window.getPartidoDelDia = function() {
+  if (typeof matches === 'undefined' || !matches) return null;
+  const hoyMs = matches.filter(m => {
+    if (!m.utcDate) return false;
+    const d = new Date(m.utcDate);
+    const today = new Date();
+    return d.getDate()===today.getDate() && d.getMonth()===today.getMonth() && d.getFullYear()===today.getFullYear();
+  });
+  const candidates = hoyMs.length > 0 ? hoyMs : matches.filter(m => m.status === 'SCHEDULED' || m.status === 'TIMED');
+  if (candidates.length === 0) return null;
+  
+  const spainMatch = candidates.find(m => m.homeTeam?.name==='Spain' || m.awayTeam?.name==='Spain');
+  if(spainMatch) return spainMatch;
+
+  const topTeams = ['France', 'Portugal', 'Argentina', 'Germany', 'England'];
+  const topMatches = candidates.filter(m => topTeams.includes(m.homeTeam?.name) || topTeams.includes(m.awayTeam?.name));
+  if(topMatches.length > 0) return topMatches[0];
+
+  return candidates[0];
+};
+
+window.savePrediccion = async function(mId) {
+  const hVal = document.getElementById('porra-h').value;
+  const aVal = document.getElementById('porra-a').value;
+  if(!hVal || !aVal) { alert(window.tr('porra_invalid')); return; }
+  const h = parseInt(hVal); const a = parseInt(aVal);
+  if(isNaN(h) || isNaN(a)) { alert(window.tr('porra_invalid')); return; }
+  
+  if(typeof window._authUser === 'undefined' || !window._authUser || typeof currentPartidaId === 'undefined' || !currentPartidaId) return;
+  const docRef = window._doc(window._db, 'partidas', currentPartidaId, 'predicciones', window._authUser.uid);
+  await window._setDoc(docRef, { matches: { [mId]: { h, a, ts: Date.now() } } }, { merge: true });
+  alert(window.tr('porra_saved'));
+};
+
+window.renderPorraCardHtml = function() {
+  const m = window.getPartidoDelDia();
+  if(!m) return '';
+  const isClosed = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED';
+  
+  let userPred = null;
+  if(typeof window._authUser !== 'undefined' && window._authUser && window._predicciones && window._predicciones[window._authUser.uid] && window._predicciones[window._authUser.uid].matches) {
+    userPred = window._predicciones[window._authUser.uid].matches[m.id];
+  }
+  
+  const hName = window.tr("country_" + (typeof nameES !== 'undefined' ? nameES(m.homeTeam?.name||'') : m.homeTeam?.name));
+  const aName = window.tr("country_" + (typeof nameES !== 'undefined' ? nameES(m.awayTeam?.name||'') : m.awayTeam?.name));
+
+  const hImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.homeTeam?.name||'') : m.homeTeam?.name), 'md') : '';
+  const aImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.awayTeam?.name||'') : m.awayTeam?.name), 'md') : '';
+
+  const hVal = userPred ? userPred.h : '';
+  const aVal = userPred ? userPred.a : '';
+
+  return `
+  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.1) 0%, rgba(30,41,59,0) 100%), var(--surface);border:1px solid rgba(230,183,17,0.3);border-radius:13px;padding:1.2rem;margin-bottom:1.5rem">
+    <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold);letter-spacing:1px;margin-bottom:.3rem">${window.tr("porra_title")}</div>
+    <div style="font-family:'Barlow Condensed';font-size:.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.3">${window.tr("porra_desc")}</div>
+    
+    <div style="display:flex;align-items:center;justify-content:center;gap:1rem;background:rgba(0,0,0,0.2);padding:1rem;border-radius:9px;margin-bottom:1rem">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;flex:1">
+        ${hImg}
+        <span style="font-family:'Barlow Condensed';font-weight:700;font-size:.9rem;text-align:center;color:var(--white)">${hName}</span>
+      </div>
+      
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <input type="number" id="porra-h" value="${hVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surf2);border:1px solid var(--border);color:var(--white);border-radius:8px">
+        <span style="font-family:'Barlow Condensed';color:var(--muted)">-</span>
+        <input type="number" id="porra-a" value="${aVal}" ${isClosed?'disabled':''} style="width:45px;height:45px;text-align:center;font-family:'Bebas Neue';font-size:1.5rem;background:var(--surf2);border:1px solid var(--border);color:var(--white);border-radius:8px">
+      </div>
+      
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;flex:1">
+        ${aImg}
+        <span style="font-family:'Barlow Condensed';font-weight:700;font-size:.9rem;text-align:center;color:var(--white)">${aName}</span>
+      </div>
+    </div>
+    
+    ${isClosed ? 
+      `<div style="text-align:center;font-family:'Barlow Condensed';font-weight:700;color:var(--muted)">${window.tr("porra_closed")}</div>` : 
+      `<button class="btn btn-gold" style="width:100%" onclick="window.savePrediccion('${m.id}')">${window.tr("porra_save")}</button>`
+    }
+  </div>`;
+};
