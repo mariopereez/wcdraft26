@@ -123,6 +123,9 @@ window.updateLanguageUI = function() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.innerHTML = window.tr(el.getAttribute('data-i18n'));
   });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = window.tr(el.getAttribute('data-i18n-placeholder'));
+  });
 };
 
 window.setLanguage = function(lang) {
@@ -1336,7 +1339,7 @@ function renderHome() {
         return new Date(a.utcDate) - new Date(b.utcDate);
       });
       displayMatches = hotMatches.slice(0, 2);
-      sectionLabel = `<span class="accent">Partidos</span> Calientes`;
+      sectionLabel = `<span class="accent">${window.tr("home_hot_accent")}</span> ${window.tr("home_hot_title")}`;
     }
 
     if(hotMatchesTitle) hotMatchesTitle.innerHTML = sectionLabel;
@@ -1353,7 +1356,7 @@ function renderHome() {
         return `
           <div class="hot-match-card">
             <div class="hmc-header">
-              <div class="hmc-label">🔥 ${stN[m.stage]||'Partido'}</div>
+              <div class="hmc-label">🔥 ${stN[m.stage]||window.tr("match_default_label")}</div>
               <div class="hmc-time">${stTxt}</div>
             </div>
             <div class="hmc-teams">
@@ -1372,7 +1375,7 @@ function renderHome() {
           </div>`;
       }).join('');
     } else {
-      hotMatchesWrap.innerHTML = `<div class="hot-match-card" style="text-align:center;color:var(--muted);font-family:'Barlow Condensed'">Sin partidos calientes disponibles</div>`;
+      hotMatchesWrap.innerHTML = `<div class="hot-match-card" style="text-align:center;color:var(--muted);font-family:'Barlow Condensed'">${window.tr("home_hot_none")}</div>`;
     }
   }
 
@@ -1646,7 +1649,7 @@ function renderTodosMatches() {
   const wrap=document.getElementById('todos-matches-list');if(!wrap)return;
   if(!ms.length){wrap.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>Sin partidos</p></div>';return;}
   const byDay={}; ms.forEach(m=>{const d=formatDay(m.utcDate);if(!byDay[d])byDay[d]=[];byDay[d].push(m);});
-  const stN={'FINAL':'🏆 Final','THIRD_PLACE':'🥉 3er','SEMI_FINALS':'Semis','QUARTER_FINALS':'Cuartos','LAST_16':'Octavos','LAST_32':'Dieciseisavos','GROUP_STAGE':'Grupos'};
+  const stN={'FINAL':'🏆 '+window.tr('stage_final'),'THIRD_PLACE':'🥉 '+window.tr('stage_third'),'SEMI_FINALS':window.tr('stage_semi'),'QUARTER_FINALS':window.tr('stage_r8'),'LAST_16':window.tr('stage_r16'),'LAST_32':window.tr('stage_r32'),'GROUP_STAGE':window.tr('stage_groups')};
   wrap.innerHTML=Object.entries(byDay).map(([day,dms])=>`<div class="match-day-group"><div class="match-day-label">${day}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:.4rem">${dms.map(m=>{const h=nameES(m.homeTeam?.name||'TBD'),a=nameES(m.awayTeam?.name||'TBD');const isMyH=myTeams.has(h),isMyA=myTeams.has(a);const ho=getOwnerData(h),ao=getOwnerData(a);const st=m.status;let sc='';if(st==='FINISHED')sc=`${m.score?.fullTime?.home??0}–${m.score?.fullTime?.away??0}`;else if(st==='IN_PLAY'||st==='PAUSED')sc=`<span style="color:var(--red)">${m.score?.fullTime?.home??0}–${m.score?.fullTime?.away??0}</span>`;else sc=formatTime(m.utcDate);const hoHtml = ho ? `<span class="owner-pill" style="${getPlayerBadgeStyle(ho.owner)}">${ho.owner}</span>` : `<span style="font-size:.62rem;visibility:hidden">&nbsp;</span>`;
     const aoHtml = ao ? `<span class="owner-pill" style="${getPlayerBadgeStyle(ao.owner)}">${ao.owner}</span>` : `<span style="font-size:.62rem;visibility:hidden">&nbsp;</span>`;
     return `<div style="display:grid;grid-template-columns:1fr 85px 1fr;align-items:center;gap:.6rem;padding:.65rem .9rem;border-bottom:1px solid rgba(42,54,80,.15);${(isMyH||isMyA)?'background:rgba(245,197,24,.025)':''}"><div style="display:flex;flex-direction:column;align-items:flex-start;gap:.2rem;min-width:0;"><div style="display:flex;align-items:center;gap:.4rem;width:100%;min-width:0;">${flagImg(h,'md')} <span style="font-family:'Barlow Condensed';font-size:.95rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${window.tr("country_" + h)}</span></div><div style="display:flex;align-items:center;width:100%;">${hoHtml}</div></div><div style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;"><span style="font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:1px;color:var(--white);">${sc}</span><span style="font-size:.55rem;color:var(--muted2);font-family:'Barlow Condensed';text-transform:uppercase;margin-top:.15rem;letter-spacing:0.5px;">${stN[m.stage]||m.group||''}</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;min-width:0;text-align:right;"><div style="display:flex;align-items:center;gap:.4rem;width:100%;min-width:0;justify-content:flex-end;"><span style="font-family:'Barlow Condensed';font-size:.95rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${window.tr("country_" + a)}</span> ${flagImg(a,'md')}</div><div style="display:flex;align-items:center;justify-content:flex-end;width:100%;">${aoHtml}</div></div></div>`;}).join('')}</div></div>`).join('');
@@ -1941,7 +1944,7 @@ const myTeamsList = draft[myDraftKey] || [];
   } else {
     pwaSection = `<div class="section-title">📱 <span class="accent">${window.tr("yo_app_title")}</span> ${window.tr("yo_app_mobile")}</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">${window.tr("yo_app_install_title")}</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;margin-top:.4rem">${window.tr("yo_app_install_desc3")}</div></div>`;
   }
-  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">${window.tr("yo_card")}</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">No tienes selecciones asignadas aún</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
+  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">${window.tr("yo_card")}</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">${window.tr("yo_no_teams")}</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
 
 <div class="section-title"><span class="accent" data-i18n="yo_acc_accent">${window.tr('yo_acc_accent')}</span> <span data-i18n="yo_acc_title">${window.tr('yo_acc_title')}</span></div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.5rem">
@@ -1976,7 +1979,7 @@ const myTeamsList = draft[myDraftKey] || [];
   <!-- Clickable Header to Toggle -->
   <div onclick="toggleNotificationsCollapse()" style="display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;cursor:pointer;user-select:none">
     <span id="yo-notif-summary" style="font-family:'Barlow Condensed';font-size:.88rem;font-weight:700;flex:1;color:var(--white)">
-      Configurar alertas y avisos
+      ${window.tr("yo_notif_config")}
     </span>
     <!-- Arrow Icon -->
     <svg id="yo-notif-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2" style="transition: transform 0.3s; transform: rotate(0deg)">
@@ -1990,10 +1993,10 @@ const myTeamsList = draft[myDraftKey] || [];
     <!-- State 1: Need Permission -->
     <div id="yo-push-prompt" style="display:none;flex-direction:column;gap:.6rem;padding-bottom:1rem">
       <div style="font-size:.85rem;color:var(--muted);line-height:1.3">
-        Mantente al día de tu liga: Recibe alertas al instante cuando haya goles, cambios en el podio o cierren las jornadas.
+        ${window.tr("yo_notif_prompt_desc")}
       </div>
       <button class="btn btn-gold btn-sm" onclick="requestNotificationPermission()" style="display:flex;align-items:center;justify-content:center;gap:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:1px;padding:.5rem;margin-top:.3rem;width:100%">
-        🔔 Habilitar alertas
+        ${window.tr("yo_notif_prompt_btn")}
       </button>
     </div>
     
@@ -2001,8 +2004,8 @@ const myTeamsList = draft[myDraftKey] || [];
     <div id="yo-push-settings" style="display:none;flex-direction:column;gap:.85rem;padding-bottom:1rem">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
         <div style="flex:1">
-          <div style="font-size:.92rem;font-weight:700;color:var(--white)">⚽ Goles y Marcadores</div>
-          <div style="font-size:.75rem;color:var(--muted)">Alertas en tiempo real de goles y resultados de tus equipos.</div>
+          <div style="font-size:.92rem;font-weight:700;color:var(--white)">${window.tr("yo_notif_opt1_title")}</div>
+          <div style="font-size:.75rem;color:var(--muted)">${window.tr("yo_notif_opt1_desc")}</div>
         </div>
         <label class="switch-control">
           <input type="checkbox" id="notif-matches" onchange="saveNotificationSettings()">
@@ -2012,8 +2015,8 @@ const myTeamsList = draft[myDraftKey] || [];
       <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
         <div style="flex:1">
-          <div style="font-size:.92rem;font-weight:700;color:var(--white)">🏆 Cambios en la Clasificación</div>
-          <div style="font-size:.75rem;color:var(--muted)">Avisos cuando subas o bajes de posición en la tabla.</div>
+          <div style="font-size:.92rem;font-weight:700;color:var(--white)">${window.tr("yo_notif_opt2_title")}</div>
+          <div style="font-size:.75rem;color:var(--muted)">${window.tr("yo_notif_opt2_desc")}</div>
         </div>
         <label class="switch-control">
           <input type="checkbox" id="notif-ranking" onchange="saveNotificationSettings()">
@@ -2023,8 +2026,8 @@ const myTeamsList = draft[myDraftKey] || [];
       <div style="border-top:1px solid rgba(42,54,80,.4)"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
         <div style="flex:1">
-          <div style="font-size:.92rem;font-weight:700;color:var(--white)">⏰ Recordatorios de Jornada</div>
-          <div style="font-size:.75rem;color:var(--muted)">Avisos antes del inicio de los partidos de tus equipos.</div>
+          <div style="font-size:.92rem;font-weight:700;color:var(--white)">${window.tr("yo_notif_opt3_title")}</div>
+          <div style="font-size:.75rem;color:var(--muted)">${window.tr("yo_notif_opt3_desc")}</div>
         </div>
         <label class="switch-control">
           <input type="checkbox" id="notif-reminders" onchange="saveNotificationSettings()">
@@ -2045,7 +2048,7 @@ const myTeamsList = draft[myDraftKey] || [];
     <!-- State 4: Unsupported Browser -->
     <div id="yo-push-unsupported" style="display:none;flex-direction:column;gap:.4rem;text-align:center;padding-bottom:1rem">
       <div style="font-size:1.2rem">ℹ️</div>
-      <div style="font-size:.9rem;font-weight:700;color:var(--white)">No soportado</div>
+      <div style="font-size:.9rem;font-weight:700;color:var(--white)">${window.tr("yo_notif_unsupported_title")}</div>
       <div style="font-size:.78rem;color:var(--muted);line-height:1.3">
         ${window.tr("yo_notif_unsupported")}
       </div>
