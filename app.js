@@ -1290,23 +1290,26 @@ function renderHome() {
   const myStatusWrap = document.getElementById('home-my-status-wrap');
   const matchDayWrap = document.getElementById('home-match-day-wrap');
 
-  // 1. PODIUM
+  if(myStatusWrap) myStatusWrap.innerHTML = ''; // We won't use this separately anymore
+
   if(podiumWrap) {
+    let combinedHtml = `<div style="background:var(--surf2); border:1px solid var(--border); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.1)">`;
+
+    // 1. PODIUM
     if(ranking.length > 0) {
       const p1 = ranking[0]; const p2 = ranking[1]; const p3 = ranking[2];
-      let podiumHtml = `<div class="podium-wrap" style="background:var(--surf2); border:1px solid var(--border); border-radius:14px; padding:1.5rem 0 0; margin-top:0.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.1)">`;
+      let podiumHtml = `<div class="podium-wrap" style="border:none; background:transparent; padding:1.5rem 0 1rem; margin-top:0; box-shadow:none; border-radius:0">`;
       if(p2) podiumHtml += `<div class="podium-step p2"><div class="podium-avatar">${avatarEl(p2.name,'',44)}</div><div class="podium-name">${p2.name}</div><div class="podium-pts">${p2.total}</div><div class="podium-base"><div class="podium-rank-num">2</div></div></div>`;
       if(p1) podiumHtml += `<div class="podium-step p1"><div class="podium-avatar">${avatarEl(p1.name,'',52)}</div><div class="podium-name">${p1.name}</div><div class="podium-pts">${p1.total}</div><div class="podium-base"><div class="podium-rank-num">1</div></div></div>`;
       if(p3) podiumHtml += `<div class="podium-step p3"><div class="podium-avatar">${avatarEl(p3.name,'',44)}</div><div class="podium-name">${p3.name}</div><div class="podium-pts">${p3.total}</div><div class="podium-base"><div class="podium-rank-num">3</div></div></div>`;
       podiumHtml += `</div>`;
-      podiumWrap.innerHTML = podiumHtml;
-    } else {
-      podiumWrap.innerHTML = '';
+      combinedHtml += podiumHtml;
     }
-  }
 
-  // 2. MY STATUS
-  if(myStatusWrap) {
+    // Divider
+    combinedHtml += `<div style="height:1px; background:var(--border); margin:0 1.5rem"></div>`;
+
+    // 2. MY STATUS
     const myRankIdx = ranking.findIndex(r=>r.name===myName);
     if(myRankIdx !== -1) {
       const myData = ranking[myRankIdx];
@@ -1323,8 +1326,8 @@ function renderHome() {
         gapHtmlBlock = `<div style="text-align:center; margin-top:0.6rem"><div style="display:inline-block; background:rgba(46,196,182,0.1); border:1px solid rgba(46,196,182,0.2); color:var(--cyan); padding:0.3rem 0.8rem; border-radius:20px; font-size:0.75rem; font-family:'Barlow Condensed'; font-weight:700">${pillText}</div></div>`;
       }
 
-      myStatusWrap.innerHTML = `
-        <div style="background:var(--surf2); border:1px solid var(--border); border-radius:12px; padding:1.2rem 1rem; display:flex; justify-content:center; align-items:center; width:100%; margin-top:0.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+      combinedHtml += `
+        <div style="padding:1.2rem 1rem; display:flex; justify-content:center; align-items:center; width:100%">
           <div style="display:flex; align-items:center; gap:3rem">
               <div style="text-align:center">
                   <div style="font-family:'Barlow Condensed';font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${window.tr("home_your_pos")}</div>
@@ -1337,13 +1340,18 @@ function renderHome() {
               </div>
           </div>
         </div>
-        ${gapHtmlBlock}
+      </div> ${gapHtmlBlock}
       `;
     } else {
-      myStatusWrap.innerHTML = '';
+      combinedHtml += `</div>`;
     }
+    
+    podiumWrap.innerHTML = combinedHtml;
+  } else if (podiumWrap) {
+    podiumWrap.innerHTML = '';
   }
 
+  // 3. Match of the Day (Rendered in its wrap)
   // 3. Match of the Day (Rendered in its wrap)
   if (matchDayWrap) {
     if (window.renderPorraCardHtml) {
