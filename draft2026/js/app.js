@@ -1314,7 +1314,7 @@ function renderHome() {
             </div>
           </div>
         </div>
-        ${gapHtml ? \`<div style="text-align:center; margin-top:.6rem">\${gapHtml}</div>\` : ''}
+        ${gapHtml ? `<div style="text-align:center; margin-top:.6rem">${gapHtml}</div>` : ''}
       `;
 
       const matchDayWrap = document.getElementById('home-match-day-wrap');
