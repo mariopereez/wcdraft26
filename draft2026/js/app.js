@@ -932,6 +932,14 @@ async function enterApp(partidaId) {
     const cfgSnap = await window._getDoc(window._doc(window._db,'partidas',partidaId,'config','data'));
     if(!cfgSnap.exists()) throw new Error('Torneo no encontrado');
     currentPartidaConfig = cfgSnap.data();
+    if(window.unsubPorra) { window.unsubPorra(); window.unsubPorra = null; }
+    window.unsubPorra = window._onSnapshot(window._doc(window._db, 'cache', 'porra'), snap => {
+      if(snap.exists()) window._globalPorraMatchId = snap.data().matchId;
+      else window._globalPorraMatchId = null;
+      if (typeof getRanking === 'function') {
+        try { renderHome(); renderYo(); renderClasificacion(); } catch(e){}
+      }
+    });
     if(window.unsubPreds) { window.unsubPreds(); window.unsubPreds = null; }
     window._predicciones = {};
     if(partidaId !== '__DEMO__') {
@@ -1806,7 +1814,12 @@ function renderAdminGroups(cont) {
     </div>`;
   });
   html += `<div class="admin-last-update">${adminMatchesData.updatedAt ? (currentLang==='en'?'🕓 Last update: ':'🕓 Última actualización: ') + new Date(adminMatchesData.updatedAt).toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES') + (adminMatchesData.updatedBy ? (currentLang==='en'?' by ':' por ') + adminMatchesData.updatedBy : '') : (currentLang==='en'?'Not updated yet':'Sin actualizar aún')}</div>`;
-  cont.innerHTML = html;
+  
+  let superAdminHtml = '';
+  if (isSuperAdmin() && typeof window.renderSuperAdminPorraHtml === 'function') {
+    superAdminHtml = window.renderSuperAdminPorraHtml();
+  }
+  cont.innerHTML = superAdminHtml + html;
 }
 function renderAdminKnockout(cont) {
   const knockout = adminMatchesData.knockout || {};
@@ -1852,7 +1865,12 @@ function renderAdminKnockout(cont) {
     </div>`;
   });
   html += `<div class="admin-last-update">${adminMatchesData.updatedAt ? (currentLang==='en'?'🕓 Last update: ':'🕓 Última actualización: ') + new Date(adminMatchesData.updatedAt).toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES') + (adminMatchesData.updatedBy ? (currentLang==='en'?' by ':' por ') + adminMatchesData.updatedBy : '') : (currentLang==='en'?'Not updated yet':'Sin actualizar aún')}</div>`;
-  cont.innerHTML = html;
+  
+  let superAdminHtml = '';
+  if (isSuperAdmin() && typeof window.renderSuperAdminPorraHtml === 'function') {
+    superAdminHtml = window.renderSuperAdminPorraHtml();
+  }
+  cont.innerHTML = superAdminHtml + html;
 }
 function adminCycleStatus(type, key, idx) {
   if (!adminMatchesData) return;
@@ -2297,6 +2315,10 @@ function downloadPlayerCard() { const canvas=document.getElementById('player-car
 
 window.getPartidoDelDia = function() {
   if (typeof matches === 'undefined' || !matches) return null;
+  if (window._globalPorraMatchId) {
+    const override = matches.find(m => String(m.id) === String(window._globalPorraMatchId));
+    if (override) return override;
+  }
   const hoyMs = matches.filter(m => {
     if (!m.utcDate) return false;
     const d = new Date(m.utcDate);
@@ -2349,7 +2371,7 @@ window.renderPorraCardHtml = function() {
   const aVal = userPred ? userPred.a : '';
 
   return `
-  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.1) 0%, rgba(30,41,59,0) 100%), var(--surface);border:1px solid rgba(230,183,17,0.3);border-radius:13px;padding:1.2rem;margin-bottom:1.5rem">
+  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.1) 0%, rgba(30,41,59,0) 100%), var(--surface);border:1px solid rgba(230,183,17,0.3);border-radius:13px;padding:1.2rem;margin-top:2.5rem; margin-bottom:2rem">
     <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold);letter-spacing:1px;margin-bottom:.3rem">${window.tr("porra_title")}</div>
     <div style="font-family:'Barlow Condensed';font-size:.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.3">${window.tr("porra_desc")}</div>
     
