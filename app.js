@@ -1293,7 +1293,7 @@ function renderHome() {
   if(myStatusWrap) myStatusWrap.innerHTML = ''; // We won't use this separately anymore
 
   if(podiumWrap) {
-    let combinedHtml = `<div style="background:var(--surf2); border:1px solid var(--border); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.1)">`;
+    let combinedHtml = `<div style="background:var(--surf2); border:1px solid var(--border); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-top:0.5rem">`;
 
     // 1. PODIUM
     if(ranking.length > 0) {
@@ -2433,7 +2433,7 @@ window.renderPorraCardHtml = function() {
   const aVal = userPred ? userPred.a : '';
 
   return `
-  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.08) 0%, var(--surf2) 100%); border:1px solid rgba(230,183,17,0.4); border-radius:14px; padding:1.5rem 1.2rem; margin-top:0.5rem; margin-bottom:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.15)">
+  <div style="background:linear-gradient(135deg, rgba(230,183,17,0.08) 0%, var(--surf2) 100%); border:1px solid rgba(230,183,17,0.4); border-radius:14px; padding:1.5rem 1.2rem; margin:0; box-shadow:0 4px 12px rgba(0,0,0,0.15)">
     
     <div style="text-align:center; margin-bottom:1.5rem">
         <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold);letter-spacing:1px">🔥 ${window.tr("porra_title")}</div>
