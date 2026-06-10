@@ -1465,9 +1465,9 @@ async function startDraft() {
   }
   renderDraft();
 }
-async function resetDraft() { if(!isAdmin())return;if(!confirm('¿Reiniciar draft? Se borran todas las elecciones.'))return;const sels=currentPartidaConfig.seleccionesPorJugador;PARTICIPANTES.forEach(p=>{draft[p]=Array(sels).fill('');});const ns={phase:'pending',orders:[],currentPick:0};draftState=ns;await pushDraft();await pushDraftState(ns);renderDraft(); }
+async function resetDraft() { if(!isAdmin())return;if(!confirm(window.tr("draft_confirm_restart")))return;const sels=currentPartidaConfig.seleccionesPorJugador;PARTICIPANTES.forEach(p=>{draft[p]=Array(sels).fill('');});const ns={phase:'pending',orders:[],currentPick:0};draftState=ns;await pushDraft();await pushDraftState(ns);renderDraft(); }
 async function randomAssignAll() {
-  if(!isAdmin())return;if(!confirm('¿Asignación aleatoria?'))return;
+  if(!isAdmin())return;if(!confirm(window.tr("draft_confirm_random")))return;
   const sels=currentPartidaConfig.seleccionesPorJugador;
   const teams=[...ALL_TEAMS].sort(()=>Math.random()-.5);
   PARTICIPANTES.forEach(p=>{draft[p]=Array(sels).fill('');});
@@ -1479,7 +1479,7 @@ function renderDraft() {
   if(!currentPartidaConfig) return;
   const ds=draftState; const myName=getCurrentPlayerName(); const sels=currentPartidaConfig.seleccionesPorJugador;
   const adminArea=document.getElementById('draft-admin-area');
-  if(isAdmin()){const total=PARTICIPANTES.length*sels;const phaseTxt=ds.phase==='pending'?window.tr('draft_status_not_started'):ds.phase==='active'?`${window.tr("draft_pick_prefix")} ${ds.currentPick+1}/${total}`:'Completado';adminArea.innerHTML=`<div class="draft-admin-bar"><span class="draft-status-txt">⚙️ Admin · ${phaseTxt}</span><div style="display:flex;gap:.4rem;flex-wrap:wrap">${ds.phase==='pending'?`<button class="btn btn-gold btn-sm" onclick="startDraft()">🎲 Iniciar draft</button>`:`<button class="btn btn-outline btn-sm" onclick="resetDraft()">🔄 Reiniciar</button>`}<button class="btn btn-outline btn-sm" onclick="randomAssignAll()">🎲 Aleatorio</button><button class="btn ${draftTestMode?'btn-warn':'btn-outline'} btn-sm" onclick="toggleTestMode()">🧪 ${draftTestMode?'Salir test':'Test'}</button></div></div>`;}
+  if(isAdmin()){const total=PARTICIPANTES.length*sels;const phaseTxt=ds.phase==='pending'?window.tr('draft_status_not_started'):ds.phase==='active'?`${window.tr("draft_pick_prefix")} ${ds.currentPick+1}/${total}`:'Completado';adminArea.innerHTML=`<div class="draft-admin-bar"><span class="draft-status-txt">${window.tr("draft_admin_title")} · ${phaseTxt}</span><div style="display:flex;gap:.4rem;flex-wrap:wrap">${ds.phase==='pending'?`<button class="btn btn-gold btn-sm" onclick="startDraft()">🎲 ${window.tr("draft_start_btn")}</button>`:`<button class="btn btn-outline btn-sm" onclick="resetDraft()">🔄 ${window.tr("draft_restart_btn")}</button>`}<button class="btn btn-outline btn-sm" onclick="randomAssignAll()">🎲 ${window.tr("draft_random_btn")}</button><button class="btn ${draftTestMode?'btn-warn':'btn-outline'} btn-sm" onclick="toggleTestMode()">🧪 ${draftTestMode?'${window.tr("draft_test_exit")}':window.tr("draft_test")}</button></div></div>`;}
   else adminArea.innerHTML='';
   const tBtn=document.getElementById('timeline-btn'); if(tBtn) tBtn.style.display=ds.currentPick>0?'inline-flex':'none';
   const isMyTurnNow=ds.phase==='active'&&isSamePlayer(ds.orders?.[ds.currentPick]?.player, myName);
@@ -1500,13 +1500,13 @@ function renderDraft() {
       <div style="font-size:2.5rem">⚽</div>
       <div class="draft-pick-name" style="font-size:1.6rem">${window.tr("draft_pending_title")}</div>
       <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed;margin-bottom:.5rem">${window.tr("lobby_code_label")}: <strong style="color:var(--gold);font-size:1.1rem">${currentPartidaConfig.codigo}</strong> · (${PARTICIPANTES.length}/${currentPartidaConfig.maxJugadores} jug.)</div>
-      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?'${window.tr("draft_admin_start")}':'${window.tr("draft_wait_admin")}'}</div>
+      <div style="font-size:.85rem;color:var(--muted);font-family:Barlow Condensed">${isAdmin()?window.tr("draft_admin_start"):window.tr("draft_wait_admin")}</div>
       ${isAdmin() ? btnShare : ''}
     </div>`;
     document.getElementById('draft-picks-log').innerHTML='<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem">${window.tr("draft_no_picks")}</div>';
     return;
   }
-  if(ds.phase==='complete'||ds.currentPick>=(ds.orders?.length||0)){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">🏆</div><div class="draft-pick-name">¡DRAFT COMPLETADO!</div></div>`;renderPicksLog();return;}
+  if(ds.phase==='complete'||ds.currentPick>=(ds.orders?.length||0)){document.getElementById('draft-order-area').innerHTML='';document.getElementById('draft-pick-area').innerHTML=`<div class="draft-pick-panel" style="min-height:260px;justify-content:center"><div style="font-size:2.5rem">🏆</div><div class="draft-pick-name">${window.tr("draft_completed_excl")}</div></div>`;renderPicksLog();return;}
   const pickIdx=ds.currentPick,cp=ds.orders[pickIdx];
   const isMyTurn=cp&&isSamePlayer(cp.player, myName); const rondaIdx=cp?cp.round:0;
   const roundOrders=ds.orders.filter(o=>o.round===rondaIdx);
