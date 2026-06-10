@@ -126,15 +126,11 @@ window.updateLanguageUI = function() {
 };
 
 window.setLanguage = function(lang) {
-  currentLang = lang;
-  localStorage.setItem('app_lang', lang);
-  updateLanguageUI();
-  if (typeof renderYo === 'function') renderYo();
-  if (typeof currentPartidaId !== 'undefined' && currentPartidaId && typeof renderDraft === 'function' && typeof renderSala === 'function') {
-    if (draftState.phase === 'active' || draftState.phase === 'complete') renderDraft();
-    else if (draftState.phase === 'pending') renderSala();
-  }
-};
+        currentLang = lang;
+        localStorage.setItem('app_lang', lang);
+        alert(window.tr('lang_alert'));
+        location.reload();
+      };
 
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -202,9 +198,9 @@ function isSamePlayer(p1, p2) {
 
 function pad(n) { return String(n).padStart(2,'0'); }
 function nameES(n) { return TEAM_MAP_INV[n] || n; }
-function formatDate(u) { return new Date(u).toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'}); }
+function formatDate(u) { return new Date(u).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'es-ES',{weekday:'short',day:'numeric',month:'short'}); }
 function formatTime(u) { return new Date(u).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+'h'; }
-function formatDay(u)  { return new Date(u).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function formatDay(u)  { return new Date(u).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
 function isToday(u)    { return new Date(u).toDateString() === new Date().toDateString(); }
 function setStatus(t, msg) { const b = document.getElementById('status-bar'); if(!b) return; b.className = t==='ok'?'':t; document.getElementById('status-text').textContent = msg; }
 function showMsg(id, type, text) { const el = document.getElementById(id); if(!el) return; el.className = 'msg '+type; el.textContent = text; }
@@ -1483,7 +1479,7 @@ function renderDraft() {
   if(!currentPartidaConfig) return;
   const ds=draftState; const myName=getCurrentPlayerName(); const sels=currentPartidaConfig.seleccionesPorJugador;
   const adminArea=document.getElementById('draft-admin-area');
-  if(isAdmin()){const total=PARTICIPANTES.length*sels;const phaseTxt=ds.phase==='pending'?window.tr('draft_status_not_started'):ds.phase==='active'?`Pick ${ds.currentPick+1}/${total}`:'Completado';adminArea.innerHTML=`<div class="draft-admin-bar"><span class="draft-status-txt">⚙️ Admin · ${phaseTxt}</span><div style="display:flex;gap:.4rem;flex-wrap:wrap">${ds.phase==='pending'?`<button class="btn btn-gold btn-sm" onclick="startDraft()">🎲 Iniciar draft</button>`:`<button class="btn btn-outline btn-sm" onclick="resetDraft()">🔄 Reiniciar</button>`}<button class="btn btn-outline btn-sm" onclick="randomAssignAll()">🎲 Aleatorio</button><button class="btn ${draftTestMode?'btn-warn':'btn-outline'} btn-sm" onclick="toggleTestMode()">🧪 ${draftTestMode?'Salir test':'Test'}</button></div></div>`;}
+  if(isAdmin()){const total=PARTICIPANTES.length*sels;const phaseTxt=ds.phase==='pending'?window.tr('draft_status_not_started'):ds.phase==='active'?`${window.tr("draft_pick_prefix")} ${ds.currentPick+1}/${total}`:'Completado';adminArea.innerHTML=`<div class="draft-admin-bar"><span class="draft-status-txt">⚙️ Admin · ${phaseTxt}</span><div style="display:flex;gap:.4rem;flex-wrap:wrap">${ds.phase==='pending'?`<button class="btn btn-gold btn-sm" onclick="startDraft()">🎲 Iniciar draft</button>`:`<button class="btn btn-outline btn-sm" onclick="resetDraft()">🔄 Reiniciar</button>`}<button class="btn btn-outline btn-sm" onclick="randomAssignAll()">🎲 Aleatorio</button><button class="btn ${draftTestMode?'btn-warn':'btn-outline'} btn-sm" onclick="toggleTestMode()">🧪 ${draftTestMode?'Salir test':'Test'}</button></div></div>`;}
   else adminArea.innerHTML='';
   const tBtn=document.getElementById('timeline-btn'); if(tBtn) tBtn.style.display=ds.currentPick>0?'inline-flex':'none';
   const isMyTurnNow=ds.phase==='active'&&isSamePlayer(ds.orders?.[ds.currentPick]?.player, myName);
@@ -1515,7 +1511,7 @@ function renderDraft() {
   const isMyTurn=cp&&isSamePlayer(cp.player, myName); const rondaIdx=cp?cp.round:0;
   const roundOrders=ds.orders.filter(o=>o.round===rondaIdx);
   const roundStart=ds.orders.findIndex(o=>o.round===rondaIdx);
-  document.getElementById('draft-order-area').innerHTML=`<div style="margin-bottom:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--muted)">RONDA ${rondaIdx+1} <span style="color:${TIER_DARK[rondaIdx]}">×${MULTS[rondaIdx]||1}</span> · Pick ${pickIdx+1}/${ds.orders.length}</div><div class="draft-order-strip">${roundOrders.map((o,i)=>{const isCurr=i===(pickIdx-roundStart),isPast=i<(pickIdx-roundStart);const tp=draft[o.player]?.[rondaIdx];return `<div class="draft-order-slot ${isCurr?'current':''} ${isPast?'done':''}"><div class="draft-slot-num">${i+1}</div>${avatarEl(o.player,'',32)}<div class="draft-slot-name">${o.player}</div>${tp?`<div style="font-size:.58rem;color:var(--gold);text-align:center">${flagImg(tp)} ${tp}</div>`:`<div style="font-size:.58rem;color:var(--muted2)">pendiente</div>`}</div>`;}).join('')}</div>`;
+  document.getElementById('draft-order-area').innerHTML=`<div style="margin-bottom:.4rem;font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--muted)">RONDA ${rondaIdx+1} <span style="color:${TIER_DARK[rondaIdx]}">×${MULTS[rondaIdx]||1}</span> · ${window.tr("draft_pick_prefix")} ${pickIdx+1}/${ds.orders.length}</div><div class="draft-order-strip">${roundOrders.map((o,i)=>{const isCurr=i===(pickIdx-roundStart),isPast=i<(pickIdx-roundStart);const tp=draft[o.player]?.[rondaIdx];return `<div class="draft-order-slot ${isCurr?'current':''} ${isPast?'done':''}"><div class="draft-slot-num">${i+1}</div>${avatarEl(o.player,'',32)}<div class="draft-slot-name">${o.player}</div>${tp?`<div style="font-size:.58rem;color:var(--gold);text-align:center">${flagImg(tp)} ${tp}</div>`:`<div style="font-size:.58rem;color:var(--muted2)">pendiente</div>`}</div>`;}).join('')}</div>`;
   const pp=document.getElementById('draft-pick-area');
   if(isMyTurn){
     // ── FIX BUG 1: guardar selección previa ANTES de reconstruir el HTML ──
@@ -1794,7 +1790,7 @@ function renderAdminGroups(cont) {
       </div>
     </div>`;
   });
-  html += `<div class="admin-last-update">${adminMatchesData.updatedAt ? '🕓 Última actualización: ' + new Date(adminMatchesData.updatedAt).toLocaleString('es-ES') + (adminMatchesData.updatedBy ? ' por ' + adminMatchesData.updatedBy : '') : 'Sin actualizar aún'}</div>`;
+  html += `<div class="admin-last-update">${adminMatchesData.updatedAt ? (currentLang==='en'?'🕓 Last update: ':'🕓 Última actualización: ') + new Date(adminMatchesData.updatedAt).toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES') + (adminMatchesData.updatedBy ? (currentLang==='en'?' by ':' por ') + adminMatchesData.updatedBy : '') : (currentLang==='en'?'Not updated yet':'Sin actualizar aún')}</div>`;
   cont.innerHTML = html;
 }
 function renderAdminKnockout(cont) {
@@ -1840,7 +1836,7 @@ function renderAdminKnockout(cont) {
       }).join('')}
     </div>`;
   });
-  html += `<div class="admin-last-update">${adminMatchesData.updatedAt ? '🕓 Última actualización: ' + new Date(adminMatchesData.updatedAt).toLocaleString('es-ES') + (adminMatchesData.updatedBy ? ' por ' + adminMatchesData.updatedBy : '') : 'Sin actualizar aún'}</div>`;
+  html += `<div class="admin-last-update">${adminMatchesData.updatedAt ? (currentLang==='en'?'🕓 Last update: ':'🕓 Última actualización: ') + new Date(adminMatchesData.updatedAt).toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES') + (adminMatchesData.updatedBy ? (currentLang==='en'?' by ':' por ') + adminMatchesData.updatedBy : '') : (currentLang==='en'?'Not updated yet':'Sin actualizar aún')}</div>`;
   cont.innerHTML = html;
 }
 function adminCycleStatus(type, key, idx) {
@@ -1919,7 +1915,7 @@ function renderSimulator(container) {
   const teams=(draft[p]||[]).filter(Boolean);if(!teams.length){container.innerHTML='';return;}
   teams.forEach(t=>{if(simSelections[t]===undefined)simSelections[t]=getCurrentSimStage(t);});
   const current=calcP(p);const sim=calcSimTotal();const diff=Math.round((sim.total-current.total)*10)/10;
-  container.innerHTML=`<div class="sim-wrap"><div style="font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:2px;color:var(--gold);margin-bottom:.3rem">🔮 ¿Qué puedes ganar aún?</div><div style="font-size:.73rem;color:var(--muted);font-family:'Barlow Condensed';margin-bottom:.9rem">Simula hasta dónde llegan tus equipos</div>${teams.map(t=>{const i=draft[p].indexOf(t);const sel=simSelections[t]||'none';const pts=Math.round((SIM_PTS[sel]||0)*(MULTS[i]||1)*10)/10;return `<div class="sim-team-row"><span class="sim-mult" style="background:${TIER_DARK[i]}">×${MULTS[i]||1}</span>${flagImg(t,'md')}<span class="sim-team-name">${window.tr('country_' + t)}</span><select class="sim-stage-select" onchange="simSelections['${t}']=this.value;renderSimInline()">${SIM_STAGES.map(s=>`<option value="${s.value}" ${sel===s.value?'selected':''}>${s.label}</option>`).join('')}</select><span class="sim-pts-preview">${pts}p</span></div>`;}).join('')}<div class="sim-result"><div><div style="font-family:'Barlow Condensed';font-size:.72rem;color:var(--muted)">Actual</div><div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--white)">${current.total}</div></div><div style="color:var(--muted);font-size:1.2rem">→</div><div><div style="font-family:'Barlow Condensed';font-size:.72rem;color:var(--muted)">Simulación</div><div class="sim-result-max">${sim.total}</div></div><div><div style="font-family:'Barlow Condensed';font-size:.72rem;color:var(--muted)">Ganas</div><div class="sim-diff">+${diff}</div></div></div></div>`;
+  container.innerHTML=`<div class="sim-wrap"><div style="font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:2px;color:var(--gold);margin-bottom:.3rem">${window.tr("yo_sim_title")}</div><div style="font-size:.73rem;color:var(--muted);font-family:'Barlow Condensed';margin-bottom:.9rem">${window.tr("yo_sim_desc")}</div>${teams.map(t=>{const i=draft[p].indexOf(t);const sel=simSelections[t]||'none';const pts=Math.round((SIM_PTS[sel]||0)*(MULTS[i]||1)*10)/10;return `<div class="sim-team-row"><span class="sim-mult" style="background:${TIER_DARK[i]}">×${MULTS[i]||1}</span>${flagImg(t,'md')}<span class="sim-team-name">${window.tr('country_' + t)}</span><select class="sim-stage-select" onchange="simSelections['${t}']=this.value;renderSimInline()">${SIM_STAGES.map(s=>`<option value="${s.value}" ${sel===s.value?'selected':''}>${s.label}</option>`).join('')}</select><span class="sim-pts-preview">${pts}p</span></div>`;}).join('')}<div class="sim-result"><div><div style="font-family:'Barlow Condensed';font-size:.72rem;color:var(--muted)">Actual</div><div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--white)">${current.total}</div></div><div style="color:var(--muted);font-size:1.2rem">→</div><div><div style="font-family:'Barlow Condensed';font-size:.72rem;color:var(--muted)">Simulación</div><div class="sim-result-max">${sim.total}</div></div><div><div style="font-family:'Barlow Condensed';font-size:.72rem;color:var(--muted)">Ganas</div><div class="sim-diff">+${diff}</div></div></div></div>`;
 }
 function renderYo() {
   const cont=document.getElementById('yo-content');if(!cont)return;
@@ -1945,7 +1941,7 @@ const myTeamsList = draft[myDraftKey] || [];
   } else {
     pwaSection = `<div class="section-title">📱 <span class="accent">App</span> Móvil</div><div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem;margin-bottom:1.5rem"><div style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem;color:var(--white)">Instala la App Oficial</div><div style="font-size:.85rem;color:var(--muted);line-height:1.4;margin-top:.4rem">Para mejor experiencia, abre esta web en tu navegador móvil (Chrome/Safari) e instálala en la pantalla de inicio.</div></div>`;
   }
-  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">📷 Cambiar foto<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">🃏 Tarjeta</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">Puntos totales</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">Mis</span> Selecciones</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">No tienes selecciones asignadas aún</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
+  cont.innerHTML=`<div class="yo-hero"><div class="yo-hero-top"><div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">${bigAv}<label style="cursor:pointer;font-size:.7rem;color:var(--muted);font-family:'Barlow Condensed';display:flex;align-items:center;gap:.3rem;margin-top:.4rem">${window.tr("yo_hero_change_pic")}<input type="file" accept="image/*" style="display:none" onchange="handleYoPhotoUpload(this)"></label></div><div><div class="yo-name">${myName}</div><div class="yo-rank-lbl">Posición #${myRank} de ${PARTICIPANTES.length}</div><div class="yo-total">${myScore.total} pts</div></div><button class="btn btn-outline btn-sm" onclick="showPlayerCard()" style="margin-left:auto;align-self:flex-start">🃏 Tarjeta</button></div><div class="yo-stats"><div class="yo-stat"><div class="v">${myScore.total}</div><div class="l">${window.tr("yo_stats_total")}</div></div><div class="yo-stat"><div class="v">${myScore.grp}</div><div class="l">Pts grupos</div></div><div class="yo-stat"><div class="v">${myScore.elim}</div><div class="l">Pts elim ×mult</div></div></div></div><div id="yo-sim-wrap"></div><div class="section-title">🎽 <span class="accent">${window.tr("yo_teams_accent")}</span> ${window.tr("yo_teams_title")}</div><div class="yo-equipos">${teamDetails.length>0?teamDetails.map(({t,i,grp,er,em,tot,st,r})=>`<div class="yo-eq" style="border-color:${TIER_DARK[i]}44"><span class="yo-mult-badge" style="background:${TIER_DARK[i]}30;color:${TIER_DARK[i]}">×${MULTS[i]||1} · R${i+1}</span><div class="yo-eq-top">${flagImg(t,'xl')}<div><div class="yo-eq-name">${window.tr('country_' + t)}</div><div class="yo-eq-sub">${r.pg||0}V · ${r.pe||0}E · ${r.pd||0}D</div></div></div><div class="yo-eq-pts">${tot} pts</div><div class="yo-eq-sub">Grupos: ${grp} · Elim: ${er}×${MULTS[i]||1}=${em}</div>${st.length>0?`<div class="yo-elim-tags">${st.map(s=>`<span class="yo-elim-tag${s.includes('CAMPEÓN')||s.includes('Bronce')?' gold':''}">${s}</span>`).join('')}</div>`:'<div style="font-size:.7rem;color:var(--muted2);margin-top:.4rem;font-family:Barlow Condensed">Sin progreso eliminatorio aún</div>'}</div>`).join(''):`<div style="color:var(--muted);font-family:'Barlow Condensed';padding:1rem 0">No tienes selecciones asignadas aún</div>`}</div>${pwaSection}<!-- FIX 3: Acciones de cuenta en Yo -->
 
 <div class="section-title"><span class="accent" data-i18n="yo_acc_accent">${window.tr('yo_acc_accent')}</span> <span data-i18n="yo_acc_title">${window.tr('yo_acc_title')}</span></div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.5rem">
@@ -2276,7 +2272,7 @@ function showPlayerCard() {
     ctx.fillStyle=TIER_DARK[myTeams.indexOf(t)];roundRect(ctx,x+152,y+8,44,20,4);ctx.fill();
     ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.fillText(`×${MULTS[myTeams.indexOf(t)]||1}`,x+158,y+22);
   });
-  ctx.fillStyle='rgba(122,139,168,0.5)';ctx.font='11px Arial';ctx.fillText('footballdraft2026.app',28,H-18);ctx.fillText(new Date().toLocaleDateString('es-ES'),W-110,H-18);
+  ctx.fillStyle='rgba(122,139,168,0.5)';ctx.font='11px Arial';ctx.fillText('footballdraft2026.app',28,H-18);ctx.fillText(new Date().toLocaleDateString(currentLang === 'en' ? 'en-US' : 'es-ES'),W-110,H-18);
   modal.classList.remove('hidden');
 }
 function roundRect(ctx,x,y,w,h,r) { ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath(); }
