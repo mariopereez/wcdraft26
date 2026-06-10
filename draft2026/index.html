@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="ls-logo-sub">Mundial · Junio 2026</div>
     </div>
     <div class="ls-countdown-wrap">
-      <div class="ls-countdown-label">Partido inaugural</div>
+      <div class="ls-countdown-label" data-i18n="home_hero_opening" data-i18n="home_hero_opening">Partido inaugural</div>
       <div class="cd-wrap" id="loading-cd"></div>
     </div>
     <div class="ls-flags">🇪🇸 🇧🇷 🇦🇷 🇫🇷 🇩🇪 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🇵🇹 🇳🇱</div>
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </button>
   <button class="bnav-item" onclick="showPage('clasificacion',this)" data-page="clasificacion">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    <span class="bnav-label">Tabla</span>
+    <span class="bnav-label" data-i18n="nav_table">Tabla</span>
   </button>
   <button class="bnav-item" onclick="showPage('yo',this)" data-page="yo">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -386,9 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="home-left">
         <div class="home-hero">
           <div class="home-hero-title" id="hero-partida-name">MUNDIAL DRAFT 2026</div>
-          <div class="home-hero-sub" id="hero-partida-sub">Elige tus selecciones · Compite por la gloria</div>
+          <div class="home-hero-sub" id="hero-partida-sub" data-i18n="home_hero_sub">Elige tus selecciones · Compite por la gloria</div>
           <div style="margin-top:.3rem" id="hero-cd-container">
-            <div style="font-family:'Barlow Condensed';font-size:.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem">Partido inaugural</div>
+            <div style="font-family:'Barlow Condensed';font-size:.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem" data-i18n="home_hero_opening">Partido inaugural</div>
             <div class="hcd-wrap" id="hero-cd"></div>
             <div style="font-size:.62rem;color:var(--muted2);font-family:'Barlow Condensed';margin-top:.3rem" id="hero-cd-match"></div>
           </div>
@@ -464,12 +464,12 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="section-title"><span class="accent" data-i18n="nav_matches">Partidos</span> y Resultados</div>
     <div id="res-admin-banner"></div>
     <div class="res-tabs">
-      <button class="res-tab active" onclick="switchResTab('todos',this)">Calendario</button>
-      <button class="res-tab" onclick="switchResTab('grupos',this)">Por equipo</button>
-      <button class="res-tab" onclick="switchResTab('eliminatoria',this)">Bracket</button>
+      <button class="res-tab active" onclick="switchResTab('todos',this)" data-i18n="res_tab_cal">Calendario</button>
+      <button class="res-tab" onclick="switchResTab('grupos',this)" data-i18n="res_tab_teams">Por equipo</button>
+      <button class="res-tab" onclick="switchResTab('eliminatoria',this)" data-i18n="res_tab_bracket">Bracket</button>
     </div>
     <div id="res-grupos-filters" class="cal-filters" style="display:none">
-      <input class="cal-search" type="text" placeholder="Buscar equipo…" oninput="filterResults(this.value)"/>
+      <input class="cal-search" type="text" placeholder="Buscar equipo..." data-i18n-placeholder="search_team" oninput="filterResults(this.value)"/>
       <button class="chip active" onclick="filterChip(this,'all')">Todos</button>
       <button class="chip" onclick="filterChip(this,'active')">Con puntos</button>
       <button class="chip" onclick="filterChip(this,'mis')">Mis equipos</button>
@@ -481,13 +481,13 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
     <div id="res-todos-wrap">
       <div class="cal-filters" style="margin-bottom:.8rem">
-        <input class="cal-search" type="text" placeholder="Buscar equipo…" oninput="filterTodosMatches(this.value)"/>
-        <button class="chip active" onclick="filterTodosChip(this,'all')">Todos</button>
-        <button class="chip" onclick="filterTodosChip(this,'finished')">Finalizados</button>
-        <button class="chip" onclick="filterTodosChip(this,'upcoming')">Pendientes</button>
-        <button class="chip" onclick="filterTodosChip(this,'mine')">Mis equipos</button>
-        <button class="chip" onclick="filterTodosChip(this,'live')">En juego</button>
-        <button class="chip" onclick="filterTodosChip(this,'today')">Hoy</button>
+        <input class="cal-search" type="text" placeholder="Buscar equipo..." data-i18n-placeholder="search_team" oninput="filterTodosMatches(this.value)"/>
+        <button class="chip active" onclick="filterTodosChip(this,'all')" data-i18n="filter_all">Todos</button>
+        <button class="chip" onclick="filterTodosChip(this,'finished')" data-i18n="filter_finished">Finalizados</button>
+        <button class="chip" onclick="filterTodosChip(this,'upcoming')" data-i18n="filter_upcoming">Pendientes</button>
+        <button class="chip" onclick="filterTodosChip(this,'mine')" data-i18n="filter_mine">Mis equipos</button>
+        <button class="chip" onclick="filterTodosChip(this,'live')" data-i18n="filter_live">En juego</button>
+        <button class="chip" onclick="filterTodosChip(this,'today')" data-i18n="filter_today">Hoy</button>
         <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="refreshMatches()">Actualizar</button>
       </div>
       <div id="todos-matches-list"></div>

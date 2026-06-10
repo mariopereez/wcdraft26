@@ -1349,7 +1349,7 @@ function renderHome() {
         if(st==='FINISHED'){sc=`<div class="hmc-score">${m.score?.fullTime?.home??'-'}–${m.score?.fullTime?.away??'-'}</div>`;stTxt='Finalizado';}
         else if(st==='IN_PLAY'||st==='PAUSED'){sc=`<div class="hmc-score live">${m.score?.fullTime?.home??0}–${m.score?.fullTime?.away??0}</div>`;stTxt='🔴 EN JUEGO';}
         else{sc=`<div class="hmc-time">${formatTime(m.utcDate)}</div>`;stTxt=formatDate(m.utcDate);}
-        const stN={'FINAL':'⭐ Final','THIRD_PLACE':'🥉 3er','SEMI_FINALS':'Semis','QUARTER_FINALS':'Cuartos','LAST_16':'Octavos','LAST_32':'16avos','GROUP_STAGE':'Grupos'};
+        const stN={'FINAL':'⭐ '+window.tr('stage_final'),'THIRD_PLACE':'🥉 '+window.tr('stage_third'),'SEMI_FINALS':window.tr('stage_semi'),'QUARTER_FINALS':window.tr('stage_r8'),'LAST_16':window.tr('stage_r16'),'LAST_32':window.tr('stage_r32'),'GROUP_STAGE':window.tr('stage_groups')};
         return `
           <div class="hot-match-card">
             <div class="hmc-header">
