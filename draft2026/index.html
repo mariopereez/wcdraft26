@@ -3,34 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Football Draft 2026</title>
+  <title>Draft 2026</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.json">
+  <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#07090f">
+  <meta name="description" content="Juego fantasy del Mundial 2026. Elige tus selecciones y compite con tus amigos.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Draft 2026">
+  <meta name="application-name" content="Draft 2026">
+
+  <!-- PWA Icons -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
 
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      });
-    }
-  </script>
+  <link rel="stylesheet" href="/main.css?v=2">
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, getDocs, query, where, updateDoc, deleteDoc, serverTimestamp }
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, getDocs, query, where, updateDoc, deleteDoc, serverTimestamp, writeBatch }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
       sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile }
@@ -59,7 +53,7 @@
     window._signInWithEmailAndPassword=signInWithEmailAndPassword;
     window._sendPasswordResetEmail=sendPasswordResetEmail;
     window._signOut=signOut; window._onAuthStateChanged=onAuthStateChanged;
-    window._updateProfile=updateProfile;
+    window._updateProfile=updateProfile; window._writeBatch=writeBatch;
 
     window._getMatchesCache = async () => {
       try { const s=await getDoc(doc(db,'cache','matches')); if(s.exists()) return s.data(); } catch(e) {}
@@ -76,22 +70,37 @@
           const cached=localStorage.getItem(cacheKey);
           if(cached) {
             const profile=JSON.parse(cached);
-            window._authUser=user; window._authProfile=profile;
-            if(window._onAuthReady) window._onAuthReady(user,profile);
-            getDoc(doc(db,'usuarios',user.uid)).then(snap=>{
-              if(snap.exists()){localStorage.setItem(cacheKey,JSON.stringify(snap.data()));window._authProfile=snap.data();}
-            }).catch(()=>{});
-            return;
+            if (profile && profile.displayName) {
+              window._authUser=user; window._authProfile=profile;
+              if(window._onAuthReady) window._onAuthReady(user,profile);
+              getDoc(doc(db,'usuarios',user.uid)).then(snap=>{
+                if(snap.exists() && snap.data().displayName){
+                  localStorage.setItem(cacheKey,JSON.stringify(snap.data()));
+                  window._authProfile=snap.data();
+                } else if (snap.exists()) {
+                  const name=user.displayName||user.email.split('@')[0];
+                  const profileData={...snap.data(), displayName:name,email:user.email};
+                  setDoc(doc(db,'usuarios',user.uid),profileData).then(() => {
+                    localStorage.setItem(cacheKey,JSON.stringify(profileData));
+                    window._authProfile=profileData;
+                  });
+                }
+              }).catch(()=>{});
+              return;
+            } else {
+              localStorage.removeItem(cacheKey);
+            }
           }
           const snap=await getDoc(doc(db,'usuarios',user.uid));
-          if(snap.exists()){
+          if(snap.exists() && snap.data().displayName){
             const profile=snap.data();
             localStorage.setItem(cacheKey,JSON.stringify(profile));
             window._authUser=user; window._authProfile=profile;
             if(window._onAuthReady) window._onAuthReady(user,profile);
           } else {
             const name=user.displayName||user.email.split('@')[0];
-            const profile={displayName:name,email:user.email,createdAt:Date.now()};
+            const existingData=snap.exists() ? snap.data() : {};
+            const profile={...existingData, displayName:name,email:user.email,createdAt:existingData.createdAt||Date.now()};
             await setDoc(doc(db,'usuarios',user.uid),profile);
             localStorage.setItem(cacheKey,JSON.stringify(profile));
             window._authUser=user; window._authProfile=profile;
@@ -109,16 +118,18 @@
 
 <div id="page-bg-layer" style="background-size:cover;background-position:center;filter:brightness(.18) saturate(.4) blur(3px);"></div>
 <script>
-// El loading screen se muestra por defecto (CSS: display:flex)
+// Mostrar loading inmediatamente para evitar flash de pantalla de login
 // Firebase restaurará la sesión y redirigirá si hay usuario activo
 document.addEventListener('DOMContentLoaded', () => {
-  // Si en 5s no hay respuesta de Firebase, mostrar login
+  const ls = document.getElementById('loading-screen');
+  if(ls) ls.style.display = 'flex';
+  // Si en 4s no hay respuesta de Firebase, mostrar login
   window._authTimeout = setTimeout(() => {
     const ls = document.getElementById('loading-screen');
-    if(ls) ls.classList.add('hidden');
+    if(ls) ls.style.display = 'none';
     const sa = document.getElementById('screen-auth');
     if(sa) sa.classList.remove('hidden');
-  }, 5000);
+  }, 4000);
 });
 </script>
 
@@ -136,25 +147,25 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="screen-bg"></div><div class="screen-bg-pattern"></div>
   <div class="screen-box">
     <div class="screen-logo">DRAFT 2026</div>
-    <div class="screen-sub">Crea tu torneo · Elige tus selecciones</div>
+    <div class="screen-sub"><span data-i18n="auth_sub">Crea tu torneo · Elige tus selecciones</span></div>
     <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchAuthTab('login',this)">Entrar</button>
-      <button class="auth-tab" onclick="switchAuthTab('register',this)">Registrarse</button>
+      <button class="auth-tab active" onclick="switchAuthTab('login',this)" data-i18n="auth_login_tab">Entrar</button>
+      <button class="auth-tab" onclick="switchAuthTab('register',this)" data-i18n="auth_register_tab">Registrarse</button>
     </div>
     <div id="auth-login" class="form-group">
       <div class="form-field"><label class="form-label">Email</label><input class="form-input" type="email" id="login-email" placeholder="tu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()"/></div>
       <div class="form-field"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
       <div class="msg" id="login-msg"></div>
-      <button class="form-btn" id="login-btn" onclick="doLogin()">Entrar</button>
-      <div class="form-link" onclick="doForgotPassword()">¿Olvidaste la contraseña? <span>Recupérala</span></div>
+      <button class="form-btn" id="login-btn" onclick="doLogin()" data-i18n="auth_login_tab">Entrar</button>
+      <div class="form-link" onclick="doForgotPassword()"><span data-i18n="auth_forgot">¿Olvidaste la contraseña? <span>Recupérala</span></span></div>
     </div>
     <div id="auth-register" class="form-group" style="display:none">
-      <div class="form-field"><label class="form-label">Tu nombre en el torneo</label><input class="form-input" type="text" id="reg-name" placeholder="Ej: Gero" maxlength="20" autocomplete="off"/></div>
+      <div class="form-field"><label class="form-label" data-i18n="auth_name">Tu nombre en el torneo</label><input class="form-input" type="text" id="reg-name" placeholder="Ej: Gero" maxlength="20" autocomplete="off"/></div>
       <div class="form-field"><label class="form-label">Email</label><input class="form-input" type="email" id="reg-email" placeholder="tu@email.com" autocomplete="email"/></div>
       <div class="form-field"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/></div>
-      <div class="form-field"><label class="form-label">Repetir contraseña</label><input class="form-input" type="password" id="reg-pass2" placeholder="Repite" autocomplete="new-password"/></div>
+      <div class="form-field"><label class="form-label" data-i18n="auth_repeat">Repetir contraseña</label><input class="form-input" type="password" id="reg-pass2" placeholder="Repite" autocomplete="new-password"/></div>
       <div class="msg" id="reg-msg"></div>
-      <button class="form-btn" id="reg-btn" onclick="doRegister()">Crear cuenta</button>
+      <button class="form-btn" id="reg-btn" onclick="doRegister()" data-i18n="auth_register_btn">Crear cuenta</button>
     </div>
   </div>
 </div>
@@ -164,49 +175,49 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="screen-bg"></div><div class="screen-bg-pattern"></div>
   <div class="screen-box wide">
     <div class="lobby-header">
-      <div class="lobby-welcome" id="lobby-welcome">Hola</div>
-      <div class="lobby-sub">Gestiona tus torneos de Draft 2026</div>
+      <div class="lobby-welcome" id="lobby-welcome" data-i18n="lobby_welcome">Hola</div>
+      <div class="lobby-sub" data-i18n="lobby_sub">Gestiona tus torneos de Draft 2026</div>
     </div>
     <div class="lobby-actions">
       <div class="lobby-btn" onclick="showCreatePartida()">
-        <div class="lobby-btn-label">Crear torneo</div>
-        <div class="lobby-btn-desc">Nuevo grupo de amigos</div>
+        <div class="lobby-btn-label" data-i18n="lobby_create_btn">Crear torneo</div>
+        <div class="lobby-btn-desc" data-i18n="lobby_create_desc">Nuevo grupo de amigos</div>
       </div>
       <div class="lobby-btn" onclick="showJoinPartida()">
-        <div class="lobby-btn-label">Unirse</div>
-        <div class="lobby-btn-desc">Entra con código de invitación</div>
+        <div class="lobby-btn-label" data-i18n="lobby_join_btn">Unirse</div>
+        <div class="lobby-btn-desc" data-i18n="lobby_join_desc">Entra con código de invitación</div>
       </div>
     </div>
     <div id="lobby-create-form" style="display:none;margin-bottom:1rem">
       <div class="form-group">
-        <div class="form-field"><label class="form-label">Nombre del torneo</label><input class="form-input" type="text" id="create-nombre" placeholder="Ej: La Liga de los Cracks 2026" maxlength="40"/></div>
-        <div class="form-field"><label class="form-label">Número de jugadores (2-16)</label><input class="form-input" type="number" id="create-jugadores" min="2" max="16" value="8"/></div>
-        <div class="form-field"><label class="form-label">Selecciones por jugador</label>
+        <div class="form-field"><label class="form-label" data-i18n="lobby_name_label">Nombre del torneo</label><input class="form-input" type="text" id="create-nombre" placeholder="Ej: La Liga de los Cracks 2026" maxlength="40"/></div>
+        <div class="form-field"><label class="form-label" data-i18n="lobby_players_label">Número de jugadores (2-16)</label><input class="form-input" type="number" id="create-jugadores" min="2" max="16" value="8"/></div>
+        <div class="form-field"><label class="form-label" data-i18n="lobby_picks_label">Selecciones por jugador</label>
           <select class="form-input" id="create-selecciones">
-            <option value="3">3 selecciones</option>
-            <option value="4">4 selecciones</option>
-            <option value="5">5 selecciones</option>
-            <option value="6" selected>6 selecciones (recomendado)</option>
+            <option value="3" data-i18n="lobby_picks_3">3 selecciones</option>
+            <option value="4" data-i18n="lobby_picks_4">4 selecciones</option>
+            <option value="5" data-i18n="lobby_picks_5">5 selecciones</option>
+            <option value="6" selected data-i18n="lobby_picks_6">6 selecciones (recomendado)</option>
           </select>
         </div>
         <div class="msg" id="create-msg"></div>
-        <button class="form-btn" id="create-btn" onclick="doCreatePartida()">Crear torneo</button>
-        <button class="form-btn secondary" onclick="hideCreateJoin()" style="margin-top:.4rem">Cancelar</button>
+        <button class="form-btn" id="create-btn" onclick="doCreatePartida()" data-i18n="lobby_create_btn">Crear torneo</button>
+        <button class="form-btn secondary" onclick="hideCreateJoin()" style="margin-top:.4rem" data-i18n="lobby_cancel">Cancelar</button>
       </div>
     </div>
     <div id="lobby-join-form" style="display:none;margin-bottom:1rem">
       <div class="form-group">
         <div class="form-field">
-          <label class="form-label">Código de invitación (6 letras)</label>
+          <label class="form-label" data-i18n="lobby_code_label">Código de invitación (6 letras)</label>
           <input class="form-input" type="text" id="join-codigo" placeholder="XXXXXX" maxlength="6" style="text-transform:uppercase;letter-spacing:4px;font-family:'Bebas Neue';font-size:1.5rem;text-align:center"/>
         </div>
         <div class="msg" id="join-msg"></div>
-        <button class="form-btn" id="join-btn" onclick="doJoinPartida()">Unirse al torneo</button>
-        <button class="form-btn secondary" onclick="hideCreateJoin()" style="margin-top:.4rem">Cancelar</button>
+        <button class="form-btn" id="join-btn" onclick="doJoinPartida()" data-i18n="lobby_join_submit">Unirse al torneo</button>
+        <button class="form-btn secondary" onclick="hideCreateJoin()" style="margin-top:.4rem" data-i18n="lobby_cancel">Cancelar</button>
       </div>
     </div>
     <div id="lobby-mis-partidas">
-      <div class="partidas-section-title">Mis torneos</div>
+      <div class="partidas-section-title" data-i18n="lobby_my_tournaments">Mis torneos</div>
       <div class="partidas-list" id="partidas-list">
         <div class="skeleton" style="height:56px"></div>
         <div class="skeleton" style="height:56px;margin-top:.4rem"></div>
@@ -214,10 +225,10 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
     <div style="margin-top:1.2rem;text-align:center;display:flex;flex-direction:column;gap:.5rem;align-items:center">
       <div class="lobby-btn" onclick="enterDemoMode()" style="width:100%;padding:.9rem 1rem;border-color:rgba(46,196,182,.3);background:rgba(46,196,182,.05)">
-        <div class="lobby-btn-label" style="color:var(--cyan)">Ver demo</div>
-        <div class="lobby-btn-desc">Explora la app con datos de ejemplo</div>
+        <div class="lobby-btn-label" style="color:var(--cyan)" data-i18n="lobby_demo_btn">Ver demo</div>
+        <div class="lobby-btn-desc" data-i18n="lobby_demo_desc">Explora la app con datos de ejemplo</div>
       </div>
-      <span class="form-link" onclick="doLogout()">Cerrar sesión</span>
+      <span class="form-link" onclick="doLogout()" data-i18n="lobby_logout">Cerrar sesión</span>
     </div>
   </div>
 </div>
@@ -225,51 +236,59 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- SCREEN: SALA DE ESPERA -->
 <div id="screen-sala" class="screen hidden">
   <div class="screen-bg"></div><div class="screen-bg-pattern"></div>
-  <div class="screen-box">
-    <div style="text-align:center;margin-bottom:.5rem">
-      <div style="font-family:'Barlow Condensed';font-size:.7rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase">SALA DE ESPERA</div>
-      <div class="sala-nombre" id="sala-nombre">Torneo</div>
-      <div class="sala-share-hint">Comparte el código con tus amigos:</div>
-      <div class="sala-codigo-wrap">
-        <div class="sala-codigo" onclick="copyCodigo()" title="Click para copiar">
-          <span id="sala-codigo-txt">XXXXXX</span>
-          <span style="font-size:.75rem;color:var(--muted)">copiar</span>
-        </div>
+  <div class="supercell-lobby-card">
+    <div class="supercell-header-badge" data-i18n="sala_title">SALA DE ESPERA</div>
+    <h2 class="supercell-sala-nombre" id="sala-nombre">Torneo</h2>
+    
+    <div class="supercell-code-panel" onclick="copyCodigo()" title="Click para copiar código">
+      <span class="supercell-code-label">Código de Invitación</span>
+      <span class="supercell-code-val" id="sala-codigo-txt">XXXXXX</span>
+    </div>
+    
+    <div class="supercell-loading-bar-wrap">
+      <div class="supercell-loading-bar-track">
+        <div class="supercell-loading-bar-fill" id="supercell-bar-fill"></div>
+        <div class="supercell-loading-bar-text" id="supercell-bar-text">BUSCANDO JUGADORES (0/0)</div>
       </div>
     </div>
-    <div class="config-grid">
-      <div class="config-item"><div class="config-label">Jugadores</div><div class="config-val" id="sala-jugadores-count">—/—</div></div>
-      <div class="config-item"><div class="config-label">Selecciones</div><div class="config-val" id="sala-sels-count">— c/u</div></div>
+    
+    <div class="supercell-tip-box">
+      <span class="supercell-tip-badge">TIP DEL DRAFT</span>
+      <div class="supercell-tip-text" id="supercell-tip-text">Preparando consejos del Mundial...</div>
     </div>
-    <div class="sala-jugadores" id="sala-jugadores-list"></div>
-    <div class="sala-status" id="sala-status">Esperando jugadores…</div>
-    <div id="sala-admin-actions" style="display:none;flex-direction:column;gap:.5rem">
-      <button class="form-btn" id="sala-start-btn" onclick="doStartDraft()" disabled>Iniciar Draft</button>
-      <button class="form-btn danger" onclick="doDeletePartida()">Eliminar torneo</button>
+    
+    <div class="sala-jugadores-circular" id="sala-jugadores-list">
+      <!-- Avatares circulares de jugadores se inyectan dinámicamente -->
     </div>
-    <button class="form-btn secondary" onclick="goBackToLobby()" style="margin-top:.6rem">Volver a mis torneos</button>
+    
+    <div id="sala-admin-actions" style="display:none;flex-direction:column;gap:.5rem;margin-top:1rem">
+      <button class="form-btn supercell-btn-jugar" id="sala-start-btn" onclick="doStartDraft()" disabled data-i18n="draft_start_btn">Iniciar Draft</button>
+      <button class="form-btn danger" onclick="doDeletePartida()" data-i18n="sala_delete_btn">Eliminar torneo</button>
+    </div>
+    
+    <button class="form-btn secondary" onclick="goBackToLobby()" style="margin-top:1rem" data-i18n="sala_back_btn">Volver a mis torneos</button>
   </div>
 </div>
 
 <!-- MODAL: CAMBIAR APODO -->
-<div id="nickname-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:flex;align-items:center;justify-content:center;padding:1.5rem">
+<div id="nickname-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;align-items:center;justify-content:center;padding:1.5rem">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:380px">
-    <div style="font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:3px;color:var(--gold);margin-bottom:1.2rem">Cambiar apodo</div>
+    <div style="font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:3px;color:var(--gold);margin-bottom:1.2rem" data-i18n="nick_title">Cambiar apodo</div>
     <div class="form-field" style="margin-bottom:.8rem">
-      <label class="form-label">Nuevo apodo</label>
+      <label class="form-label" data-i18n="nick_label">Nuevo apodo</label>
       <input class="form-input" type="text" id="nickname-input" placeholder="Ej: Gero, ElJefe..." maxlength="20" autocomplete="off"/>
     </div>
     <div class="msg" id="nickname-msg"></div>
-    <div style="font-size:.72rem;color:var(--muted);font-family:'Barlow Condensed';margin-bottom:1rem">El apodo no afecta a torneos ya iniciados.</div>
+    <div style="font-size:.72rem;color:var(--muted);font-family:'Barlow Condensed';margin-bottom:1rem" data-i18n="nick_note">El apodo no afecta a torneos ya iniciados.</div>
     <div style="display:flex;gap:.6rem">
-      <button class="form-btn" id="nickname-save-btn" onclick="doChangeNickname()">Guardar</button>
-      <button class="form-btn secondary" onclick="closeChangeNickname()">Cancelar</button>
+      <button class="form-btn" id="nickname-save-btn" onclick="doChangeNickname()" data-i18n="nick_save">Guardar</button>
+      <button class="form-btn secondary" onclick="closeChangeNickname()" data-i18n="lobby_cancel">Cancelar</button>
     </div>
   </div>
 </div>
 
 <!-- LOADING -->
-<div id="loading-screen">
+<div id="loading-screen" style="display:none">
   <div class="ls-bg"></div>
   <div class="ls-glow"></div>
   <div class="ls-orb ls-orb1"></div>
@@ -310,20 +329,20 @@ document.addEventListener('DOMContentLoaded', () => {
 <nav id="main-nav" style="display:none">
   <div class="nav-logo">DRAFT 2026<div class="nav-partida" id="nav-partida-name"></div></div>
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="showPage('home',this)">Inicio</button>
-    <button class="tab-btn" onclick="showPage('draft',this)">Draft</button>
-    <button class="tab-btn" onclick="showPage('resultados',this)">Partidos</button>
-    <button class="tab-btn" onclick="showPage('grupos',this)">Grupos</button>
-    <button class="tab-btn" onclick="showPage('clasificacion',this)">Clasificación</button>
-    <button class="tab-btn" onclick="showPage('predicciones',this)">Predicciones</button>
-    <button class="tab-btn" onclick="showPage('yo',this)">Yo</button>
-    <button class="tab-btn" onclick="showPage('reglas',this)">Reglas</button>
+    <button class="tab-btn active" onclick="showPage('home',this)" data-i18n="nav_home">Inicio</button>
+    <button class="tab-btn" onclick="showPage('draft',this)" data-i18n="nav_draft">Draft</button>
+    <button class="tab-btn" onclick="showPage('resultados',this)" data-i18n="nav_matches">Partidos</button>
+    <button class="tab-btn" onclick="showPage('grupos',this)" data-i18n="nav_groups">Grupos</button>
+    <button class="tab-btn" onclick="showPage('clasificacion',this)" data-i18n="nav_table">Clasificación</button>
+    <button class="tab-btn" onclick="showPage('yo',this)" data-i18n="nav_me">Yo</button>
+    <button class="tab-btn" onclick="showPage('reglas',this)" data-i18n="nav_rules">Reglas</button>
+    <button class="tab-btn" id="nav-admin-tab" onclick="showPage('admin',this)" style="display:none;color:var(--gold)" data-i18n="nav_admin">⚙ Admin</button>
   </div>
   <div class="nav-right">
     <div id="nav-avatar-wrap"></div>
     <div class="nav-actions">
       <div class="nav-name" id="nav-name">—</div>
-      <div id="nav-superadmin-badge" style="display:none;font-size:.58rem;font-family:'Barlow Condensed';font-weight:700;color:#000;background:var(--gold);border-radius:6px;padding:.05rem .35rem;letter-spacing:1px">SUPER ADMIN</div>
+      <div id="nav-superadmin-badge" style="display:none;font-size:.58rem;font-family:'Barlow Condensed';font-weight:700;color:#000;background:var(--gold);border-radius:6px;padding:.05rem .35rem;letter-spacing:1px" data-i18n="nav_admin_badge">SUPER ADMIN</div>
     </div>
   </div>
 </nav>
@@ -332,17 +351,17 @@ document.addEventListener('DOMContentLoaded', () => {
 <nav id="bottom-nav" style="display:none">
   <button class="bnav-item active" onclick="showPage('home',this)" data-page="home">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span class="bnav-label">Inicio</span>
+    <span class="bnav-label" data-i18n="nav_home">Inicio</span>
   </button>
   <button class="bnav-item" onclick="showPage('resultados',this)" data-page="resultados">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-    <span class="bnav-label">Partidos</span>
+    <span class="bnav-label" data-i18n="nav_matches">Partidos</span>
   </button>
   <button class="bnav-item bnav-center" onclick="showPage('draft',this)" data-page="draft">
     <div class="bnav-center-btn">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     </div>
-    <span class="bnav-label">Draft</span>
+    <span class="bnav-label" data-i18n="nav_draft">Draft</span>
   </button>
   <button class="bnav-item" onclick="showPage('clasificacion',this)" data-page="clasificacion">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -350,7 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
   </button>
   <button class="bnav-item" onclick="showPage('yo',this)" data-page="yo">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    <span class="bnav-label">Yo</span>
+    <span class="bnav-label" data-i18n="nav_me">Yo</span>
+  </button>
+  <button class="bnav-item" id="bnav-admin-tab" onclick="showPage('admin',this)" data-page="admin" style="display:none">
+    <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+    <span class="bnav-label" style="color:var(--gold)">Admin</span>
   </button>
 </nav>
 
@@ -364,32 +387,41 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="home-hero">
           <div class="home-hero-title" id="hero-partida-name">MUNDIAL DRAFT 2026</div>
           <div class="home-hero-sub" id="hero-partida-sub">Elige tus selecciones · Compite por la gloria</div>
-          <div style="margin-top:.3rem">
+          <div style="margin-top:.3rem" id="hero-cd-container">
             <div style="font-family:'Barlow Condensed';font-size:.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem">Partido inaugural</div>
             <div class="hcd-wrap" id="hero-cd"></div>
             <div style="font-size:.62rem;color:var(--muted2);font-family:'Barlow Condensed';margin-top:.3rem" id="hero-cd-match"></div>
           </div>
         </div>
-        <div class="participants-strip">
-          <div class="participants-strip-title">Participantes</div>
-          <div class="participants-row" id="participants-row"></div>
+        
+        <!-- Mi Estado -->
+        <div id="home-my-status-wrap"></div>
+        
+        <!-- El Podio -->
+        <div id="home-podium-wrap"></div>
+        
+        <!-- Partidos Calientes -->
+        <div id="home-hot-matches-wrap">
+          <div class="section-title" style="margin-bottom:.7rem"><span class="accent" data-i18n="nav_matches">Partidos</span> Calientes</div>
+          <div id="hot-matches-container"><div class="skeleton" style="height:90px"></div></div>
         </div>
-        <div>
-          <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Partido</span> del día</div>
-          <div id="match-of-day-wrap"><div class="skeleton" style="height:90px"></div></div>
-        </div>
-        <div id="my-matches-section" style="display:none">
-          <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Próximos</span> de tus equipos</div>
-          <div id="my-matches-wrap"></div>
-        </div>
-        <div>
-          <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Partidos</span></div>
-          <div id="home-all-matches"><div class="skeleton" style="height:60px;margin-bottom:.4rem"></div><div class="skeleton" style="height:60px"></div></div>
+
+        <!-- Mis Selecciones -->
+        <div id="home-my-teams-section" style="display:none">
+          <div class="section-title" style="margin-bottom:.7rem"><span class="accent">Mis</span> Selecciones</div>
+          <div id="home-my-teams-wrap" class="home-my-teams-wrap"></div>
         </div>
       </div>
+      
       <div class="home-right">
+        <!-- Feed / Última Hora -->
+        <div class="ranking-sidebar" style="margin-bottom:1.5rem">
+          <div class="ranking-sidebar-header">Última Hora</div>
+          <div id="feed-sidebar-body" style="padding:1rem; font-size:.8rem; color:var(--muted); font-family:'Barlow Condensed'; text-align:center;">Próximamente...</div>
+        </div>
+        <!-- Clasificación (Desktop) -->
         <div class="ranking-sidebar">
-          <div class="ranking-sidebar-header">Clasificación</div>
+          <div class="ranking-sidebar-header">Clasificación General</div>
           <div id="ranking-sidebar-body"></div>
         </div>
       </div>
@@ -429,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <!-- RESULTADOS -->
   <div id="page-resultados" class="page">
-    <div class="section-title"><span class="accent">Partidos</span> y Resultados</div>
+    <div class="section-title"><span class="accent" data-i18n="nav_matches">Partidos</span> y Resultados</div>
     <div id="res-admin-banner"></div>
     <div class="res-tabs">
       <button class="res-tab active" onclick="switchResTab('todos',this)">Calendario</button>
@@ -471,29 +503,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <!-- CLASIFICACION -->
   <div id="page-clasificacion" class="page">
-    <div class="section-title"><span class="accent">Clasificación</span> General</div>
+    <div class="section-title"><span class="accent" data-i18n="nav_table">Clasificación</span> General</div>
     <div class="clas-grid" id="clas-grid"></div>
   </div>
 
-  <!-- PREDICCIONES -->
-  <div id="page-predicciones" class="page">
-    <div class="section-title"><span class="accent">Predicciones</span></div>
-    <div class="notice">Predice el marcador exacto antes del partido · <strong>1 punto</strong> por acierto</div>
-    <div class="cal-filters">
-      <button class="chip active" onclick="predFilter(this,'pending')">Por predecir</button>
-      <button class="chip" onclick="predFilter(this,'mine')">Mis predicciones</button>
-      <button class="chip" onclick="predFilter(this,'ranking')">Ranking</button>
-      <button class="chip" onclick="predFilter(this,'all')">Todos</button>
-    </div>
-    <div id="pred-container"></div>
-  </div>
 
   <!-- YO -->
   <div id="page-yo" class="page"><div id="yo-content"></div></div>
 
   <!-- REGLAS -->
   <div id="page-reglas" class="page">
-    <div class="section-title"><span class="accent">Reglas</span> del juego</div>
+    <div class="section-title"><span class="accent" data-i18n="nav_rules">Reglas</span> del juego</div>
     <div style="background:linear-gradient(135deg,rgba(245,197,24,.08),rgba(72,149,239,.06));border:1px solid rgba(245,197,24,.2);border-radius:16px;padding:1.4rem 1.6rem;margin-bottom:1.2rem">
       <div style="font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:2px;color:var(--gold);margin-bottom:.5rem">En qué consiste</div>
       <p style="font-size:.9rem;color:var(--white);line-height:1.7;font-family:'Barlow'"><strong>Draft Cup 2026</strong> es un juego de predicción del Mundial donde cada jugador elige selecciones nacionales antes de que empiece el torneo. Cuanto más lejos lleguen tus equipos, más puntos ganas.</p>
@@ -535,11 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <p class="rule-note">El multiplicador solo afecta a puntos de eliminatoria, no a los de grupos.</p>
       </div>
-      <div class="rule-card">
-        <h3 style="color:var(--cyan)">Predicciones (bonus)</h3>
-        <div class="rule-row"><span>Marcador exacto correcto</span><span class="rule-val">+1 pt</span></div>
-        <p class="rule-note">Solo puedes predecir antes de que empiece el partido.</p>
-      </div>
+
       <div class="rule-card">
         <h3 style="color:var(--gold)">Cómo se gana</h3>
         <div class="rule-step"><div class="rule-step-num">1</div><div class="rule-step-text">Elige equipos que lleguen lejos, especialmente en las últimas rondas.</div></div>
@@ -549,8 +565,35 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
 
+  <!-- ADMIN PANEL (Super Admins only) -->
+  <div id="page-admin" class="page">
+    <div class="section-title">⚙ <span class="accent">Panel</span> de Administración</div>
+    <div class="admin-notice">🔐 Solo visible para Super Admins · Los cambios afectan a TODAS las ligas</div>
+    <div class="admin-panel-header">
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchAdminTab('groups',this)">Fase de Grupos</button>
+        <button class="admin-tab" onclick="switchAdminTab('knockout',this)">Eliminatorias</button>
+      </div>
+    </div>
+    <div id="admin-content"></div>
+    <div class="admin-save-floating">
+      <button class="admin-save-btn" id="admin-save-btn" onclick="adminSaveAll()">💾 GUARDAR CAMBIOS</button>
+    </div>
+  </div>
+
 </main>
 
-<script src="/js/app.js"></script>
+<script src="js/translations.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Registrar Service Worker para PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registrado:', reg.scope))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
 </body>
 </html>
