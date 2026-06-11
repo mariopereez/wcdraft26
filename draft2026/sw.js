@@ -4,7 +4,7 @@
 //  Network-First para Firebase y Football API.
 // ═══════════════════════════════════════════════════════
 
-const CACHE_NAME = 'draft2026-v20';
+const CACHE_NAME = 'draft2026-v21';
 
 // Recursos del shell que se cachean en la instalación
 const SHELL_ASSETS = [

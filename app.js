@@ -2422,6 +2422,12 @@ window.savePrediccion = async function(mId) {
   const h = parseInt(hVal); const a = parseInt(aVal);
   if(isNaN(h) || isNaN(a)) { alert(window.tr('porra_invalid')); return; }
   
+  
+  const m = window.getPartidoDelDia();
+  if(!m || String(m.id) !== String(mId) || m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED') {
+    alert(window.tr ? window.tr('porra_closed') : 'El partido ya ha comenzado o finalizado. No se aceptan más predicciones.');
+    return;
+  }
   const msg = window.tr ? window.tr('porra_confirm') : '¿Estás seguro? Solo puedes guardar la predicción una vez.';
   if(!confirm(msg)) return;
   
