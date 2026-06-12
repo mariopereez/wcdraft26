@@ -1586,16 +1586,16 @@ function showTeamMatches(team) {
   teamMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
 
   header.innerHTML = `
-    <div style="margin-bottom:.5rem">${flagImg(team, 'xl')}</div>
-    <div style="font-family:'Bebas Neue';font-size:2.2rem;color:var(--white);letter-spacing:2px;line-height:1.1">${window.tr("country_" + team).toUpperCase()}</div>
-    <div style="font-family:'Barlow Condensed';font-size:.8rem;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-top:.3rem">Todos sus partidos</div>
+    <div style="margin-bottom:1rem; transform: scale(1.2); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3))">${flagImg(team, 'xl')}</div>
+    <div style="font-family:'Bebas Neue';font-size:2.8rem;color:var(--white);letter-spacing:3px;line-height:1;margin-bottom:.5rem">${window.tr("country_" + team).toUpperCase()}</div>
+    <div style="display:inline-block; background:rgba(245,197,24,0.1); color:var(--gold); padding:0.4rem 1.2rem; border-radius:30px; font-family:'Barlow Condensed'; font-size:.8rem; text-transform:uppercase; letter-spacing:2px; font-weight:700">Partidos del Mundial</div>
   `;
 
   if(teamMatches.length === 0) {
-    body.innerHTML = `<div style="text-align:center;color:var(--muted);padding:2rem;font-family:'Barlow Condensed'">No hay partidos programados para esta selección.</div>`;
+    body.innerHTML = `<div style="text-align:center;color:var(--muted);padding:3rem;font-family:'Barlow Condensed';font-size:1.1rem;opacity:0.6 ">No hay partidos programados para esta selección.</div>`;
   } else {
     const highlightSet = new Set([team]);
-    body.innerHTML = teamMatches.map(m => renderMatchCard(m, highlightSet)).join('');
+    body.innerHTML = `<div style="display:flex;flex-direction:column;gap:.7rem;padding-top:.5rem">${teamMatches.map(m => renderMatchCard(m, highlightSet)).join('')}</div>`;
   }
 
   modal.classList.remove('hidden');

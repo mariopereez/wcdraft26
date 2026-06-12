@@ -218,7 +218,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 .hmc-header { display:flex; justify-content:space-between; margin-bottom:.8rem; align-items:center; }
 .hmc-label { font-family:'Barlow Condensed'; font-size:.75rem; letter-spacing:2px; color:var(--orange); text-transform:uppercase; font-weight:700; }
 .hmc-time { font-size:.7rem; color:var(--muted); font-family:'Barlow Condensed'; }
-.hmc-teams { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:.8rem; }
+.hmc-teams { display:grid; grid-template-columns:1fr 90px 1fr; align-items:center; gap:.8rem; }
 .hmc-team { display:flex; flex-direction:column; align-items:center; gap:.3rem; text-align:center; min-width:0; }
 .hmc-team-name { font-family:'Barlow Condensed'; font-size:1rem; font-weight:700; }
 .hmc-owner { font-size:.65rem; font-family:'Barlow Condensed'; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:.1rem .5rem; color:var(--muted); margin-top:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; display:inline-block; }
@@ -251,6 +251,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 .mod-score { font-family:'Bebas Neue'; font-size:1.8rem; color:var(--white); letter-spacing:3px; }
 .mod-score.live { color:var(--red); animation:livePulse 1.5s infinite; }
 @keyframes livePulse { 0%,100% { opacity:1 } 50% { opacity:.5 } }
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .mod-time { font-size:.68rem; color:var(--muted); font-family:'Barlow Condensed'; }
 .my-match-card { background:var(--surface); border:1px solid rgba(245,197,24,.2); border-left:3px solid var(--gold); border-radius:10px; padding:.6rem .9rem; display:grid; grid-template-columns:1fr auto 1fr; gap:.4rem; align-items:center; margin-bottom:.4rem; }
 .mmc-team { display:flex; align-items:center; gap:.35rem; font-family:'Barlow Condensed'; font-size:.85rem; font-weight:700; min-width:0; }
@@ -392,16 +393,16 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 .chip { padding:.25rem .75rem; border-radius:20px; font-size:.7rem; font-weight:700; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Barlow Condensed'; transition:.15s; }
 .chip:hover { border-color:var(--muted); color:var(--white); }
 .chip.active { background:var(--gold); color:#000; border-color:var(--gold); }
-.match-card { background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:.75rem 1rem; display:grid; grid-template-columns:1fr auto 1fr; gap:.6rem; align-items:center; margin-bottom:.4rem; transition:.18s; position:relative; overflow:hidden; }
+.match-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:.75rem 1rem; display:grid; grid-template-columns: 1fr 100px 1fr; gap:.6rem; align-items:center; margin-bottom:.4rem; transition:.18s; position:relative; overflow:hidden; }
 .match-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--border); }
 .match-card.my-team::before { background:var(--gold); }
 .match-card.my-team { background:rgba(245,197,24,.04); border-color:rgba(245,197,24,.2); }
-.match-team { display:flex; align-items:center; gap:.4rem; }
-.match-team.away { flex-direction:row-reverse; }
-.match-name { font-family:'Barlow Condensed'; font-size:.88rem; font-weight:700; }
+.match-team { display:flex; align-items:center; gap:.5rem; min-width: 0; }
+.match-team.away { flex-direction:row-reverse; text-align: right; }
+.match-name { font-family:'Barlow Condensed'; font-size:.9rem; font-weight:700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 .match-name.away { text-align:right; }
-.match-vs { text-align:center; min-width:70px; }
-.match-score { font-family:'Bebas Neue'; font-size:1.4rem; color:var(--white); letter-spacing:2px; }
+.match-vs { text-align:center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 100px; }
+.match-score { font-family:'Bebas Neue'; font-size:1.6rem; color:var(--white); letter-spacing:2px; line-height: 1; }
 .match-score.live { color:var(--red); animation:livePulse 1.5s infinite; }
 .match-time { font-size:.68rem; color:var(--muted); font-family:'Barlow Condensed'; }
 .match-status { font-size:.6rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:.1rem .4rem; border-radius:4px; font-family:'Barlow Condensed'; }
@@ -1413,23 +1414,25 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 /* ── HOME MY TEAMS GRID ── */
 .home-my-teams-wrap {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+  gap: 1rem;
   margin-top: 0.5rem;
 }
 .home-team-card {
   background: linear-gradient(135deg, var(--surface) 0%, var(--surf2) 100%);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1rem 0.8rem;
+  border-radius: 16px;
+  padding: 1.2rem 0.8rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   position: relative;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  min-height: 125px;
+  justify-content: center;
 }
 .home-team-card:hover {
   transform: translateY(-3px);
