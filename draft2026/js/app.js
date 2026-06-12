@@ -59,7 +59,7 @@ const BRACKET_ROUNDS = [
 ];
 const GRUPOS_WC2026 = {
   "A":["México","Sudáfrica","Corea del Sur","República Checa"],
-  "B":["Canadá","Bosnia y Herzegovina","Catar","Suiza"],
+  "B":["Canadá","Suiza","Catar","Bosnia y Herzegovina"],
   "C":["Brasil","Marruecos","Haití","Escocia"],
   "D":["Estados Unidos","Paraguay","Australia","Turquía"],
   "E":["Alemania","Curazao","Costa de Marfil","Ecuador"],
