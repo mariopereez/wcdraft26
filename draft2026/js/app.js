@@ -1189,16 +1189,22 @@ function applyAdminDataToMatches(adminData) {
       if (!homeES || !awayES) return;
       const seed = seeds.find(s => {
         const h = nameES(s.homeTeam?.name || ''), a = nameES(s.awayTeam?.name || '');
-        return s.group === `GROUP_${g}` && h === homeES && a === awayES;
+        return s.group === `GROUP_${g}` && ((h === homeES && a === awayES) || (h === awayES && a === homeES));
       });
       if (seed) {
         seed.status = am.status || 'SCHEDULED';
         if (am.homeScore != null && am.awayScore != null) {
+          let hs = am.homeScore, as = am.awayScore;
+          const mapH = nameES(seed.homeTeam?.name || '');
+          if (mapH === awayES) {
+            hs = am.awayScore;
+            as = am.homeScore;
+          }
           seed.score = {
             winner: am.status === 'FINISHED'
-              ? (am.homeScore > am.awayScore ? 'HOME_TEAM' : am.homeScore < am.awayScore ? 'AWAY_TEAM' : 'DRAW')
+              ? (hs > as ? 'HOME_TEAM' : hs < as ? 'AWAY_TEAM' : 'DRAW')
               : null,
-            fullTime: { home: am.homeScore, away: am.awayScore }
+            fullTime: { home: hs, away: as }
           };
         }
         if (am.status !== 'SCHEDULED') seed._seed = false;
@@ -1852,13 +1858,18 @@ function renderAdminGroups(cont) {
   const groups = adminMatchesData.groups || {};
   let html = '';
   Object.entries(GRUPOS_WC2026).forEach(([g, teams]) => {
-    // Aseguramos que los equipos coincidan con la configuración actual (fix para el problema de alineación)
-    const gMatches = (groups[g] || GROUP_PAIRINGS.map(([hi, ai]) => ({
-      home: teams[hi], away: teams[ai], homeScore: null, awayScore: null, status: 'SCHEDULED'
-    }))).map((m, i) => {
-      // Sincronizar nombres de equipos por si GRUPOS_WC2026 cambió pero el cache de admin no
-      const [hi, ai] = GROUP_PAIRINGS[i];
-      return { ...m, home: teams[hi], away: teams[ai] };
+    const savedMatches = groups[g] || [];
+    const gMatches = GROUP_PAIRINGS.map(([hi, ai]) => {
+      const home = teams[hi];
+      const away = teams[ai];
+      let saved = Object.values(savedMatches).find(sm => sm && sm.home === home && sm.away === away);
+      if (!saved) {
+        const reversed = Object.values(savedMatches).find(sm => sm && sm.home === away && sm.away === home);
+        if (reversed) {
+          saved = { home: home, away: away, homeScore: reversed.awayScore, awayScore: reversed.homeScore, status: reversed.status };
+        }
+      }
+      return { home, away, homeScore: saved ? saved.homeScore : null, awayScore: saved ? saved.awayScore : null, status: saved ? saved.status : 'SCHEDULED' };
     });
 
     if (!adminMatchesData.groups) adminMatchesData.groups = {};
