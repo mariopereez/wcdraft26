@@ -194,25 +194,71 @@ function stopTipRotation() {
 }
 
 // ── HERO DYNAMIC MESSAGES ──────────────────────────────────
-const HERO_MESSAGES = [
-  "¡Bienvenido al Draft Cup 2026!",
-  "32 Selecciones · 1 Ganador · Gloria Eterna",
-  "La ruta a la gloria empieza en Norteamérica",
-  "Compite con tus amigos y domina el Mundial",
-  "¿Tienes ya tu estrategia para el Draft?",
-  "El Mundial como nunca lo habías jugado"
-];
 let heroMsgInterval = null;
 function startHeroRotation() {
   const el = document.getElementById('hero-dynamic-msg');
   if(!el) return;
-  let idx = 0;
   if(heroMsgInterval) clearInterval(heroMsgInterval);
+
+  const generateMessages = () => {
+    const msgs = ["¡BIENVENIDO AL DRAFT CUP 2026!"];
+    const ranking = typeof getRanking === 'function' ? getRanking() : [];
+    const finishedMatches = (typeof matches !== 'undefined' ? matches : []).filter(m => m.status === 'FINISHED');
+
+    // 1. Leader message
+    if(ranking.length > 0) {
+      msgs.push(`¡${ranking[0].name.toUpperCase()} LIDERA LA TABLA CON ${ranking[0].total} PUNTOS!`);
+      if(ranking.length > 1) {
+        msgs.push(`¡${ranking[1].name.toUpperCase()} SIGUE DE CERCA AL LÍDER EN 2ª POSICIÓN!`);
+      }
+    }
+
+    // 2. Result messages
+    if(finishedMatches.length > 0) {
+      // Latest 3 matches
+      const latest = [...finishedMatches].reverse().slice(0, 3);
+      latest.forEach(m => {
+        const hName = nameES(m.homeTeam?.name || '');
+        const aName = nameES(m.awayTeam?.name || '');
+        const hScore = m.score?.fullTime?.home;
+        const aScore = m.score?.fullTime?.away;
+        
+        if(hScore !== null && aScore !== null) {
+          msgs.push(`RESULTADO: ${hName.toUpperCase()} ${hScore}-${aScore} ${aName.toUpperCase()}`);
+          
+          // Owner involvement
+          const hOwner = getOwnerData(hName);
+          const aOwner = getOwnerData(aName);
+          
+          if(hOwner && aOwner && hOwner.owner !== aOwner.owner) {
+            if(hScore > aScore) {
+              msgs.push(`¡${hOwner.owner.toUpperCase()} SE IMPONE ANTE ${aOwner.owner.toUpperCase()} GRACIAS A ${hName.toUpperCase()}!`);
+            } else if (aScore > hScore) {
+              msgs.push(`¡${aOwner.owner.toUpperCase()} GANA EL DUELO A ${hOwner.owner.toUpperCase()} CON ${aName.toUpperCase()}!`);
+            } else {
+              msgs.push(`${hOwner.owner.toUpperCase()} Y ${aOwner.owner.toUpperCase()} REPARTEN PUNTOS EN UN DUELO DIRECTO`);
+            }
+          }
+        }
+      });
+    }
+
+    if(msgs.length === 1) msgs.push("LA GLORIA TE ESPERA EN MÉXICO, CANADÁ Y EE. UU.");
+    return msgs;
+  };
+
+  let messages = generateMessages();
+  let idx = 0;
+  el.textContent = messages[0].toUpperCase();
+
   heroMsgInterval = setInterval(() => {
     el.style.opacity = '0';
     setTimeout(() => {
-      idx = (idx + 1) % HERO_MESSAGES.length;
-      el.textContent = HERO_MESSAGES[idx].toUpperCase();
+      // Re-generate messages occasionally to stay fresh
+      if(idx === 0) messages = generateMessages();
+      
+      idx = (idx + 1) % messages.length;
+      el.textContent = messages[idx].toUpperCase();
       el.style.opacity = '1';
     }, 500);
   }, 5000);
@@ -652,7 +698,7 @@ function refreshCurrentPage() {
 }
 
 // ── INIT ───────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => { window.updateLanguageUI(); startCountdown(); });
+document.addEventListener('DOMContentLoaded', () => { window.updateLanguageUI(); });
 
 // ── DEMO MODE ──────────────────────────────────────────────
 function enterDemoMode() {
