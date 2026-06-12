@@ -1855,11 +1855,17 @@ function renderAdminGroups(cont) {
   const groups = adminMatchesData.groups || {};
   let html = '';
   Object.entries(GRUPOS_WC2026).forEach(([g, teams]) => {
-    const gMatches = groups[g] || GROUP_PAIRINGS.map(([hi, ai]) => ({
+    // Aseguramos que los equipos coincidan con la configuración actual (fix para el problema de alineación)
+    const gMatches = (groups[g] || GROUP_PAIRINGS.map(([hi, ai]) => ({
       home: teams[hi], away: teams[ai], homeScore: null, awayScore: null, status: 'SCHEDULED'
-    }));
+    }))).map((m, i) => {
+      // Sincronizar nombres de equipos por si GRUPOS_WC2026 cambió pero el cache de admin no
+      const [hi, ai] = GROUP_PAIRINGS[i];
+      return { ...m, home: teams[hi], away: teams[ai] };
+    });
+
     if (!adminMatchesData.groups) adminMatchesData.groups = {};
-    if (!adminMatchesData.groups[g]) adminMatchesData.groups[g] = gMatches;
+    adminMatchesData.groups[g] = gMatches;
 
     html += `<div class="admin-group-card">
       <div class="admin-group-header">⚽ GRUPO ${g}</div>
@@ -2424,7 +2430,9 @@ window.savePrediccion = async function(mId) {
   
   
   const m = window.getPartidoDelDia();
-  if(!m || String(m.id) !== String(mId) || m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED') {
+  const isTimeClosed = m && m.utcDate && new Date(m.utcDate) < new Date();
+
+  if(!m || String(m.id) !== String(mId) || m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED' || isTimeClosed) {
     alert(window.tr ? window.tr('porra_closed') : 'El partido ya ha comenzado o finalizado. No se aceptan más predicciones.');
     return;
   }
@@ -2444,7 +2452,9 @@ window.savePrediccion = async function(mId) {
 window.renderPorraCardHtml = function() {
   const m = window.getPartidoDelDia();
   if(!m) return '';
-  const isTimeClosed = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED';
+  const isTimeClosed = m.utcDate && new Date(m.utcDate) < new Date();
+  const isStatusClosed = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED';
+  const isActuallyClosed = isTimeClosed || isStatusClosed;
   
   let userPred = null;
   if(typeof window._authUser !== 'undefined' && window._authUser && window._predicciones && window._predicciones[window._authUser.uid] && window._predicciones[window._authUser.uid].matches) {
@@ -2457,7 +2467,7 @@ window.renderPorraCardHtml = function() {
   const hImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.homeTeam?.name||'') : m.homeTeam?.name), 'md') : '';
   const aImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.awayTeam?.name||'') : m.awayTeam?.name), 'md') : '';
 
-  const isClosed = isTimeClosed || !!userPred;
+  const isClosed = isActuallyClosed || !!userPred;
   const hVal = userPred ? userPred.h : '';
   const aVal = userPred ? userPred.a : '';
 
@@ -2491,15 +2501,109 @@ window.renderPorraCardHtml = function() {
     </div>
     
     <div style="margin-top:1.5rem">
-      ${isClosed && !userPred ? 
+      ${isActuallyClosed && !userPred ? 
         `<div style="text-align:center;font-family:'Barlow Condensed';font-weight:700;color:var(--muted);background:var(--surface);padding:.8rem;border-radius:8px;border:1px solid var(--border)">${window.tr("porra_closed")}</div>` : 
       userPred ? 
         `<div style="text-align:center;font-family:'Barlow Condensed';font-weight:700;color:var(--cyan);background:rgba(46,196,182, 0.1);padding:.8rem;border-radius:8px;border:1px solid rgba(46,196,182, 0.3)">✓ ${window.tr("porra_done")}</div>` :
         `<button class="btn btn-gold" style="width:100%;padding:.8rem;font-size:1.1rem;letter-spacing:1px;border-radius:8px" onclick="window.savePrediccion('${m.id}')">${window.tr("porra_save")}</button>`
       }
     </div>
-  </div>`;
+  </div>
+  `;
 };
+
+// ── RENDER: PREDICCIONES (OVERVIEW) ────────────────────────
+function switchResTab(tab, btn) {
+  document.querySelectorAll('.res-tab').forEach(t => t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const ids = {
+    todos:        ['res-todos-wrap', 'res-todos-filters'],
+    grupos:       ['results-grid', 'res-grupos-filters'],
+    eliminatoria: ['res-elim-wrap'], // No filters for bracket
+    predicciones: ['res-predicciones-wrap']
+  };
+  Object.keys(ids).forEach(k => {
+    ids[k].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.style.display = k === tab ? 'block' : 'none';
+    });
+  });
+  if(tab === 'predicciones') renderPrediccionesTab();
+  else if(tab === 'todos') renderResults();
+  else if(tab === 'grupos') renderResults();
+  else if(tab === 'eliminatoria') renderResults();
+}
+
+function renderPrediccionesTab() {
+  const cont = document.getElementById('preds-overall-container');
+  if(!cont) return;
+  const m = window.getPartidoDelDia();
+  if(!m) {
+    cont.innerHTML = '<div class="empty-state"><div class="icon">🔮</div><p>No hay partido del día activo para predecir.</p></div>';
+    return;
+  }
+
+  const hName = window.tr("country_" + (nameES(m.homeTeam?.name||'')));
+  const aName = window.tr("country_" + (nameES(m.awayTeam?.name||'')));
+  const hImg = flagImg(nameES(m.homeTeam?.name||''), 'md');
+  const aImg = flagImg(nameES(m.awayTeam?.name||''), 'md');
+
+  // Recolectar todas las predicciones de los jugadores para ESTE partido
+  const preds = [];
+  Object.entries(currentPartidaJugadores).forEach(([uid, jug]) => {
+    const p = jug.predicciones?.matches?.[m.id];
+    if(p) {
+        preds.push({ name: jug.displayName || '—', h: p.h, a: p.a, ts: p.ts });
+    }
+  });
+
+  // Ordenar por tiempo (más recientes primero)
+  preds.sort((a,b) => b.ts - a.ts);
+
+  let html = `
+    <div style="background:var(--surf2); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:2rem">
+        <div style="display:flex; align-items:center; justify-content:center; gap:1.5rem; margin-bottom:1.5rem">
+            <div style="text-align:center; flex:1">
+                ${flagImg(nameES(m.homeTeam?.name||''), 'xl')}
+                <div style="font-family:'Bebas Neue'; font-size:1.2rem; color:var(--white); margin-top:.4rem">${hName}</div>
+            </div>
+            <div style="font-family:'Bebas Neue'; font-size:1.8rem; color:var(--gold)">VS</div>
+            <div style="text-align:center; flex:1">
+                ${flagImg(nameES(m.awayTeam?.name||''), 'xl')}
+                <div style="font-family:'Bebas Neue'; font-size:1.2rem; color:var(--white); margin-top:.4rem">${aName}</div>
+            </div>
+        </div>
+        <div style="text-align:center; font-family:'Barlow Condensed'; font-size:.85rem; color:var(--muted)">
+            ${window.tr("porra_desc")}
+        </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:1rem">👥 <span class="accent">Pronósticos</span> del grupo</div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:.8rem">
+        ${preds.length > 0 ? preds.map(p => `
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:.8rem; display:flex; flex-direction:column; align-items:center; gap:.5rem">
+                <div style="font-family:'Barlow Condensed'; font-weight:700; font-size:.85rem; color:var(--white); border-bottom:1px solid var(--border); width:100%; text-align:center; padding-bottom:.4rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+                    ${p.name}
+                </div>
+                <div style="font-family:'Bebas Neue'; font-size:1.6rem; color:var(--gold); display:flex; align-items:center; gap:.4rem">
+                    <span>${p.h}</span>
+                    <span style="font-size:1rem; opacity:.5">—</span>
+                    <span>${p.a}</span>
+                </div>
+                <div style="font-size:.6rem; color:var(--muted2); font-family:'Barlow Condensed'">
+                    ${new Date(p.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                </div>
+            </div>
+        `).join('') : `
+            <div style="grid-column: 1 / -1; text-align:center; padding:3rem 1rem; color:var(--muted2); font-family:'Barlow Condensed'; background:var(--surf2); border-radius:12px; border:1px dashed var(--border2)">
+                Nadie ha hecho su apuesta todavía. ¡Sé el primero!
+            </div>
+        `}
+    </div>
+  `;
+
+  cont.innerHTML = html;
+}
 
 window.renderSuperAdminPorraHtml = function() {
   if (typeof matches === 'undefined' || !matches || !matches.length) return '';

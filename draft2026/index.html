@@ -520,6 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="res-tab active" onclick="switchResTab('todos',this)" data-i18n="res_tab_cal">Calendario</button>
       <button class="res-tab" onclick="switchResTab('grupos',this)" data-i18n="res_tab_teams">Por equipo</button>
       <button class="res-tab" onclick="switchResTab('eliminatoria',this)" data-i18n="res_tab_bracket">Bracket</button>
+      <button class="res-tab" onclick="switchResTab('predicciones',this)" data-i18n="nav_predictions">Predicciones</button>
     </div>
     <div id="res-grupos-filters" class="cal-filters" style="display:none">
       <input class="cal-search" type="text" placeholder="Buscar equipo..." data-i18n-placeholder="search_team" oninput="filterResults(this.value)"/>
@@ -531,6 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
     <div id="res-elim-wrap" style="display:none">
       
       <div class="bracket-wrap"><div class="bracket" id="bracket-container"></div></div>
+    </div>
+    <div id="res-predicciones-wrap" style="display:none">
+        <div id="preds-overall-container"></div>
     </div>
     <div id="res-todos-wrap">
       <div class="cal-filters" style="margin-bottom:.8rem">
