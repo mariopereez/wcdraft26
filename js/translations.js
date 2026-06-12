@@ -32,7 +32,7 @@ window.translations = {
  
     bracket_tbd: "Por determinar",
  
-    home_hero_sub: "Elige tus selecciones · Compite por la gloria",
+    home_hero_dynamic: "¡Bienvenido al Draft Cup 2026!",
     home_hero_opening: "Partido inaugural",
     time_days: "días",
     time_hours: "horas",
@@ -188,7 +188,7 @@ window.translations = {
  
     bracket_tbd: "TBD",
  
-    home_hero_sub: "Draft your teams · Compete for glory",
+    home_hero_dynamic: "Welcome to Draft Cup 2026!",
     home_hero_opening: "Opening match",
     time_days: "days",
     time_hours: "hours",

@@ -193,6 +193,31 @@ function stopTipRotation() {
   }
 }
 
+// ── HERO DYNAMIC MESSAGES ──────────────────────────────────
+const HERO_MESSAGES = [
+  "¡Bienvenido al Draft Cup 2026!",
+  "32 Selecciones · 1 Ganador · Gloria Eterna",
+  "La ruta a la gloria empieza en Norteamérica",
+  "Compite con tus amigos y domina el Mundial",
+  "¿Tienes ya tu estrategia para el Draft?",
+  "El Mundial como nunca lo habías jugado"
+];
+let heroMsgInterval = null;
+function startHeroRotation() {
+  const el = document.getElementById('hero-dynamic-msg');
+  if(!el) return;
+  let idx = 0;
+  if(heroMsgInterval) clearInterval(heroMsgInterval);
+  heroMsgInterval = setInterval(() => {
+    el.style.opacity = '0';
+    setTimeout(() => {
+      idx = (idx + 1) % HERO_MESSAGES.length;
+      el.textContent = HERO_MESSAGES[idx].toUpperCase();
+      el.style.opacity = '1';
+    }, 500);
+  }, 5000);
+}
+
 // ── GENERIC HELPERS ────────────────────────────────────────
 function isSamePlayer(p1, p2) {
   if(!p1 || !p2) return false;
@@ -612,7 +637,10 @@ function showPage(id, btn) {
   if(id === 'yo') { _yoLastHash = ''; renderYo(); return; }
   if(id === 'admin') { renderAdminPanel(); return; }
   const renders = { home:renderHome, draft:renderDraft, resultados:renderResults, clasificacion:renderClasificacion, grupos:renderGrupos };
-  if(renders[id]) renders[id]();
+  if(renders[id]) {
+    renders[id]();
+    if(id === 'home') startHeroRotation();
+  }
 }
 function refreshCurrentPage() {
   const a = document.querySelector('.page.active'); if(!a) return;
