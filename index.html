@@ -632,6 +632,15 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
 
+  <!-- MODAL: PARTIDOS DE SELECCIÓN -->
+  <div id="team-matches-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:1.5rem" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div style="background:var(--surf);border:1px solid var(--border);border-radius:20px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;position:relative;padding:1.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.5)">
+      <button onclick="document.getElementById('team-matches-modal').classList.add('hidden')" style="position:absolute;top:1rem;right:1rem;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1.5rem;line-height:1">&times;</button>
+      <div id="tmm-header" style="text-align:center;margin-bottom:1.5rem"></div>
+      <div id="tmm-body" style="display:flex;flex-direction:column;gap:.8rem"></div>
+    </div>
+  </div>
+
 </main>
 
 <script src="js/translations.js"></script>

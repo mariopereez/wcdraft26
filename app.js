@@ -1555,7 +1555,7 @@ function renderHome() {
       const ep = teamElimRaw(t);
       const em = Math.round(ep * (MULTS[i] || 1) * 10) / 10;
       const tot = Math.round((gp + em) * 10) / 10;
-      return `<div class="home-team-card" style="border-color:${PLAYER_COLORS[i % PLAYER_COLORS.length]}33">
+      return `<div class="home-team-card" style="border-color:${PLAYER_COLORS[i % PLAYER_COLORS.length]}33; cursor:pointer" onclick="showTeamMatches('${t}')">
         <div class="htc-badge" style="background:${TIER_DARK[i]}">×${MULTS[i] || 1}</div>
         <div class="htc-flag">${flagImg(t, 'md')}</div>
         <div class="htc-name">${window.tr("country_" + t)}</div>
@@ -1569,6 +1569,36 @@ function renderHome() {
   // 5. Sidebar Ranking
   const sb=document.getElementById('ranking-sidebar-body');
   if(sb) sb.innerHTML=ranking.map((r,i)=>`<div class="ranking-sidebar-row ${r.name===myName?'is-me':''}">${['🥇','🥈','🥉'][i]?`<div class="rsb-pos ${i===0?'p1':i===1?'p2':'p3'}">${['🥇','🥈','🥉'][i]}</div>`:`<div class="rsb-pos">${i+1}</div>`}${avatarEl(r.name,'',24)}<div class="rsb-name">${r.name}${r.name===myName?' ⭐':''}</div><div class="rsb-pts">${r.total}</div></div>`).join('');
+}
+
+function showTeamMatches(team) {
+  const modal = document.getElementById('team-matches-modal');
+  const header = document.getElementById('tmm-header');
+  const body = document.getElementById('tmm-body');
+  if(!modal || !header || !body) return;
+
+  const teamMatches = (typeof matches !== 'undefined' ? matches : []).filter(m => {
+    const h = nameES(m.homeTeam?.name || ''), a = nameES(m.awayTeam?.name || '');
+    return h === team || a === team;
+  });
+
+  // Sort by date
+  teamMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+
+  header.innerHTML = `
+    <div style="margin-bottom:.5rem">${flagImg(team, 'xl')}</div>
+    <div style="font-family:'Bebas Neue';font-size:2.2rem;color:var(--white);letter-spacing:2px;line-height:1.1">${window.tr("country_" + team).toUpperCase()}</div>
+    <div style="font-family:'Barlow Condensed';font-size:.8rem;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-top:.3rem">Todos sus partidos</div>
+  `;
+
+  if(teamMatches.length === 0) {
+    body.innerHTML = `<div style="text-align:center;color:var(--muted);padding:2rem;font-family:'Barlow Condensed'">No hay partidos programados para esta selección.</div>`;
+  } else {
+    const highlightSet = new Set([team]);
+    body.innerHTML = teamMatches.map(m => renderMatchCard(m, highlightSet)).join('');
+  }
+
+  modal.classList.remove('hidden');
 }
 
 // ── RENDER: MATCH CARD ─────────────────────────────────────
