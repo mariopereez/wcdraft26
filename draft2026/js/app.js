@@ -1184,12 +1184,9 @@ function applyAdminDataToMatches(adminData) {
   if (!adminData) return seeds;
   // Apply group match data
   Object.entries(adminData.groups || {}).forEach(([g, groupMatches]) => {
-    const teams = GRUPOS_WC2026[g];
-    if (!teams) return;
-    groupMatches.forEach((am, idx) => {
-      const [hi, ai] = GROUP_PAIRINGS[idx];
-      if (!GROUP_PAIRINGS[idx]) return;
-      const homeES = teams[hi], awayES = teams[ai];
+    groupMatches.forEach((am) => {
+      const homeES = am.home, awayES = am.away;
+      if (!homeES || !awayES) return;
       const seed = seeds.find(s => {
         const h = nameES(s.homeTeam?.name || ''), a = nameES(s.awayTeam?.name || '');
         return s.group === `GROUP_${g}` && h === homeES && a === awayES;
@@ -1971,6 +1968,10 @@ function adminCollectInputs() {
       const aEl = document.getElementById(`admin-g-${g}-${i}-a`);
       if (hEl) m.homeScore = hEl.value !== '' ? parseInt(hEl.value) : null;
       if (aEl) m.awayScore = aEl.value !== '' ? parseInt(aEl.value) : null;
+      // Los nombres ya vienen sincronizados de renderAdminGroups, pero por seguridad:
+      const [hi, ai] = GROUP_PAIRINGS[i];
+      const teams = GRUPOS_WC2026[g];
+      if (teams) { m.home = teams[hi]; m.away = teams[ai]; }
     });
   });
   ['r16', 'r8', 'r4', 'semi', 'third', 'final'].forEach(key => {
