@@ -2527,7 +2527,7 @@ window.renderPorraCardHtml = function() {
     if (typeof currentPartidaJugadores !== 'undefined' && currentPartidaJugadores) {
        Object.keys(currentPartidaJugadores).forEach(uid => {
           const pData = currentPartidaJugadores[uid];
-          const pName = pData.nombre || 'Jugador';
+          const pName = pData.displayName || pData.email || 'Jugador';
           const pPreds = window._predicciones && window._predicciones[uid] ? window._predicciones[uid].matches : null;
           const matchPred = pPreds ? pPreds[m.id] : null;
           
