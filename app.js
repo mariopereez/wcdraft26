@@ -2565,7 +2565,7 @@ window.renderPorraCardHtml = function() {
   const hVal = userPred ? userPred.h : '';
   const aVal = userPred ? userPred.a : '';
 
-  return `
+  const baseHtml = `
   <div style="background:linear-gradient(135deg, rgba(230,183,17,0.08) 0%, var(--surf2) 100%); border:1px solid rgba(230,183,17,0.4); border-radius:14px; padding:1rem 1rem; margin:0; box-shadow:0 4px 12px rgba(0,0,0,0.15)">
     
     <div style="text-align:center; margin-bottom:1.5rem">
@@ -2601,8 +2601,61 @@ window.renderPorraCardHtml = function() {
         `<div style="text-align:center;font-family:'Barlow Condensed';font-weight:700;color:var(--cyan);background:rgba(46,196,182, 0.1);padding:.8rem;border-radius:8px;border:1px solid rgba(46,196,182, 0.3)">✓ ${window.tr("porra_done")}</div>` :
         `<button class="btn btn-gold" style="width:100%;padding:.8rem;font-size:1.1rem;letter-spacing:1px;border-radius:8px" onclick="window.savePrediccion('${m.id}')">${window.tr("porra_save")}</button>`
       }
-    </div>
-  </div>`;
+    </div>`;
+
+  let othersHtml = '';
+  if (isTimeClosed) {
+    let predsListHtml = '';
+    if (typeof currentPartidaJugadores !== 'undefined' && currentPartidaJugadores) {
+       Object.keys(currentPartidaJugadores).forEach(uid => {
+          const pData = currentPartidaJugadores[uid];
+          const pName = pData.nombre || 'Jugador';
+          const pPreds = window._predicciones && window._predicciones[uid] ? window._predicciones[uid].matches : null;
+          const matchPred = pPreds ? pPreds[m.id] : null;
+          
+          if (matchPred) {
+             predsListHtml += `
+               <div style="display:flex; justify-content:space-between; align-items:center; padding:.6rem; border-bottom:1px solid var(--border)">
+                  <div style="display:flex; align-items:center; gap:.5rem">
+                     ${typeof avatarEl !== 'undefined' ? avatarEl(pName, '', 28) : ''}
+                     <span style="font-family:'Barlow Condensed'; color:var(--white); font-weight:500; font-size:1.05rem">${pName}</span>
+                  </div>
+                  <div style="font-family:'Bebas Neue'; color:var(--gold); font-size:1.3rem; letter-spacing:1px; background:rgba(230,183,17,0.1); padding:0.2rem 0.6rem; border-radius:4px; border:1px solid rgba(230,183,17,0.2)">
+                     ${matchPred.h} - ${matchPred.a}
+                  </div>
+               </div>
+             `;
+          } else {
+             predsListHtml += `
+               <div style="display:flex; justify-content:space-between; align-items:center; padding:.6rem; border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <div style="display:flex; align-items:center; gap:.5rem; opacity:0.5">
+                     ${typeof avatarEl !== 'undefined' ? avatarEl(pName, '', 28) : ''}
+                     <span style="font-family:'Barlow Condensed'; color:var(--muted)">${pName}</span>
+                  </div>
+                  <div style="font-family:'Barlow Condensed'; color:var(--muted); font-size:.9rem; opacity:0.6; font-style:italic">
+                     Sin predicción
+                  </div>
+               </div>
+             `;
+          }
+       });
+    }
+    
+    if (predsListHtml) {
+       othersHtml = `
+         <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed rgba(230,183,17,0.3)">
+            <div style="font-family:'Barlow Condensed'; font-size:.9rem; color:var(--gold); margin-bottom:.8rem; text-align:center; letter-spacing:1px; text-transform:uppercase">
+               Predicciones de la Liga
+            </div>
+            <div style="background:var(--surf2); border-radius:8px; border:1px solid rgba(255,255,255,0.05); overflow:hidden">
+               ${predsListHtml}
+            </div>
+         </div>
+       `;
+    }
+  }
+
+  return baseHtml + othersHtml + `</div>`;
 };
 
 window.renderSuperAdminPorraHtml = function() {
