@@ -1612,7 +1612,7 @@ function renderMatchCard(m, myTeams) {
   else{scoreHtml=`<div class="match-time">${formatTime(m.utcDate)}</div>`;statusHtml=`<span class="match-status status-scheduled">${formatDate(m.utcDate)}</span>`;}
   const ho=getOwnerData(h), ao=getOwnerData(a);
   const hot=ho&&!isMyH?ownerTag(ho):''; const aot=ao&&!isMyA?ownerTag(ao):'';
-  return `<div class="match-card ${isMyMatch?'my-team':''}"><div class="match-team"><div style="display:flex;align-items:center;gap:.4rem">${flagImg(h,'lg')}<span class="match-name">${window.tr("country_" + h)}${isMyH?`<span class="my-badge">${myName}</span>`:''}${hot}</span></div></div><div class="match-vs">${scoreHtml}${statusHtml}</div><div class="match-team away"><div style="display:flex;align-items:center;gap:.4rem;flex-direction:row-reverse">${flagImg(a,'lg')}<span class="match-name away">${window.tr("country_" + a)}${isMyA?`<span class="my-badge">${myName}</span>`:''}${aot}</span></div></div></div>`;
+  return `<div class="match-card ${isMyMatch?'my-team':''}"><div class="match-team">${flagImg(h,'lg')}<span class="match-name">${window.tr("country_" + h)}${isMyH?`<span class="my-badge">${myName}</span>`:''}${hot}</span></div><div class="match-vs">${scoreHtml}${statusHtml}</div><div class="match-team away">${flagImg(a,'lg')}<span class="match-name away">${window.tr("country_" + a)}${isMyA?`<span class="my-badge">${myName}</span>`:''}${aot}</span></div></div>`;
 }
 
 // ── RENDER: DRAFT ──────────────────────────────────────────

@@ -253,7 +253,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 @keyframes livePulse { 0%,100% { opacity:1 } 50% { opacity:.5 } }
 @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .mod-time { font-size:.68rem; color:var(--muted); font-family:'Barlow Condensed'; }
-.my-match-card { background:var(--surface); border:1px solid rgba(245,197,24,.2); border-left:3px solid var(--gold); border-radius:10px; padding:.6rem .9rem; display:grid; grid-template-columns:1fr auto 1fr; gap:.4rem; align-items:center; margin-bottom:.4rem; }
+.my-match-card { background:var(--surface); border:1px solid rgba(245,197,24,.2); border-left:3px solid var(--gold); border-radius:10px; padding:.6rem .9rem; display:grid; grid-template-columns:minmax(0, 1fr) auto minmax(0, 1fr); gap:.4rem; align-items:center; margin-bottom:.4rem; }
 .mmc-team { display:flex; align-items:center; gap:.35rem; font-family:'Barlow Condensed'; font-size:.85rem; font-weight:700; min-width:0; }
 .mmc-vs { text-align:center; min-width:55px; }
 .mmc-score { font-family:'Bebas Neue'; font-size:1.2rem; color:var(--white); }
@@ -393,7 +393,7 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 .chip { padding:.25rem .75rem; border-radius:20px; font-size:.7rem; font-weight:700; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Barlow Condensed'; transition:.15s; }
 .chip:hover { border-color:var(--muted); color:var(--white); }
 .chip.active { background:var(--gold); color:#000; border-color:var(--gold); }
-.match-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:.75rem 1rem; display:grid; grid-template-columns: 1fr 100px 1fr; gap:.6rem; align-items:center; margin-bottom:.4rem; transition:.18s; position:relative; overflow:hidden; }
+.match-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:.75rem 1rem; display:grid; grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr); gap:.6rem; align-items:center; margin-bottom:.4rem; transition:.18s; position:relative; overflow:hidden; }
 .match-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--border); }
 .match-card.my-team::before { background:var(--gold); }
 .match-card.my-team { background:rgba(245,197,24,.04); border-color:rgba(245,197,24,.2); }
