@@ -77,7 +77,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, getDocs, query, where, updateDoc, deleteDoc, serverTimestamp, writeBatch }
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, getDocs, query, where, updateDoc, deleteDoc, serverTimestamp, writeBatch, runTransaction }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
       sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile }
@@ -107,6 +107,7 @@
     window._sendPasswordResetEmail=sendPasswordResetEmail;
     window._signOut=signOut; window._onAuthStateChanged=onAuthStateChanged;
     window._updateProfile=updateProfile; window._writeBatch=writeBatch;
+    window._runTransaction=runTransaction;
 
     window._getMatchesCache = async () => {
       try { const s=await getDoc(doc(db,'cache','matches')); if(s.exists()) return s.data(); } catch(e) {}

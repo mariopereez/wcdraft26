@@ -549,6 +549,8 @@ function showScreen(name) {
 function unsubscribeAll() {
   _salaListeners.forEach(u => u()); _salaListeners = [];
   _partidaListeners.forEach(u => u()); _partidaListeners = [];
+  if (window.unsubPorra) { window.unsubPorra(); window.unsubPorra = null; }
+  if (window.unsubPreds) { window.unsubPreds(); window.unsubPreds = null; }
 }
 
 // ── LOADING SCREEN ─────────────────────────────────────────
@@ -1014,9 +1016,9 @@ function setupPartidaListeners(partidaId) {
 }
 
 // ── FIRESTORE WRITE HELPERS ────────────────────────────────
-async function pushResults()    { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'results','data'),results);}catch(e){} }
-async function pushDraft()      { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draft','data'),draft);}catch(e){} }
-async function pushDraftState(ns){ if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draftState','data'),ns);}catch(e){} }
+async function pushResults()    { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'results','data'),results,{merge:true});}catch(e){console.error('Error pushResults:', e); alert('Error al guardar resultados en el servidor.');} }
+async function pushDraft()      { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draft','data'),draft,{merge:true});}catch(e){console.error('Error pushDraft:', e); alert('Error al guardar el draft en el servidor.');} }
+async function pushDraftState(ns){ if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draftState','data'),ns,{merge:true});}catch(e){console.error('Error pushDraftState:', e); alert('Error al guardar el estado del draft.');} }
 
 // ── MATCHES API ────────────────────────────────────────────
 function normalizeMatchStage(stage) {

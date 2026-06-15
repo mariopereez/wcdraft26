@@ -546,6 +546,8 @@ function showScreen(name) {
 function unsubscribeAll() {
   _salaListeners.forEach(u => u()); _salaListeners = [];
   _partidaListeners.forEach(u => u()); _partidaListeners = [];
+  if (window.unsubPorra) { window.unsubPorra(); window.unsubPorra = null; }
+  if (window.unsubPreds) { window.unsubPreds(); window.unsubPreds = null; }
 }
 
 // ── LOADING SCREEN ─────────────────────────────────────────
@@ -1049,9 +1051,9 @@ function setupPartidaListeners(partidaId) {
 }
 
 // ── FIRESTORE WRITE HELPERS ────────────────────────────────
-async function pushResults()    { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'results','data'),results);}catch(e){} }
-async function pushDraft()      { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draft','data'),draft);}catch(e){} }
-async function pushDraftState(ns){ if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draftState','data'),ns);}catch(e){} }
+async function pushResults()    { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'results','data'),results,{merge:true});}catch(e){console.error('Error pushResults:', e); alert('Error al guardar resultados en el servidor.');} }
+async function pushDraft()      { if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draft','data'),draft,{merge:true});}catch(e){console.error('Error pushDraft:', e); alert('Error al guardar el draft en el servidor.');} }
+async function pushDraftState(ns){ if(!currentPartidaId||window._demoMode) return; try{await window._setDoc(window._doc(window._db,'partidas',currentPartidaId,'draftState','data'),ns,{merge:true});}catch(e){console.error('Error pushDraftState:', e); alert('Error al guardar el estado del draft.');} }
 
 // ── MATCHES API ────────────────────────────────────────────
 function normalizeMatchStage(stage) {
@@ -1559,14 +1561,14 @@ async function startDraft() {
   }
   renderDraft();
 }
-async function resetDraft() { if(!isAdmin())return;if(!confirm(window.tr("draft_confirm_restart")))return;const sels=currentPartidaConfig.seleccionesPorJugador;PARTICIPANTES.forEach(p=>{draft[p]=Array(sels).fill('');});const ns={phase:'pending',orders:[],currentPick:0};draftState=ns;await pushDraft();await pushDraftState(ns);renderDraft(); }
+async function resetDraft() { if(!isAdmin())return;if(!confirm(window.tr("draft_confirm_restart")))return;const sels=currentPartidaConfig.seleccionesPorJugador;PARTICIPANTES.forEach(p=>{draft[p]=Array(sels).fill('');});const ns={phase:'pending',orders:[],currentPick:0};draftState=ns; try{if(!window._demoMode){const b=window._writeBatch(window._db);b.set(window._doc(window._db,'partidas',currentPartidaId,'draft','data'),draft);b.set(window._doc(window._db,'partidas',currentPartidaId,'draftState','data'),ns);await b.commit();}}catch(e){console.error(e);} renderDraft(); }
 async function randomAssignAll() {
   if(!isAdmin())return;if(!confirm(window.tr("draft_confirm_random")))return;
   const sels=currentPartidaConfig.seleccionesPorJugador;
   const teams=[...ALL_TEAMS].sort(()=>Math.random()-.5);
   PARTICIPANTES.forEach(p=>{draft[p]=Array(sels).fill('');});
   let idx=0; for(let r=0;r<sels;r++){const order=[...PARTICIPANTES].sort(()=>Math.random()-.5);order.forEach(p=>{if(idx<teams.length)draft[p][r]=teams[idx++];});}
-  await pushDraft(); await pushDraftState({phase:'complete',orders:[],currentPick:PARTICIPANTES.length*sels}); renderDraft();
+  const ns={phase:'complete',orders:[],currentPick:PARTICIPANTES.length*sels}; try{if(!window._demoMode){const b=window._writeBatch(window._db);b.set(window._doc(window._db,'partidas',currentPartidaId,'draft','data'),draft);b.set(window._doc(window._db,'partidas',currentPartidaId,'draftState','data'),ns);await b.commit();}}catch(e){console.error(e);} renderDraft();
 }
 function toggleTestMode() { draftTestMode=!draftTestMode; draftTestPlayer=null; renderDraft(); }
 function renderDraft() {
@@ -1666,11 +1668,16 @@ async function confirmDraftPick() {
 
   try {
     if(!window._demoMode && currentPartidaId) {
-      // ATOMIC: save pick + advance currentPick in one batch — eliminates stuck-turn race condition
-      const batch = window._writeBatch(window._db);
-      batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draft', 'data'), { [draftKey]: draft[draftKey] }, { merge: true });
-      batch.set(window._doc(window._db, 'partidas', currentPartidaId, 'draftState', 'data'), nextState);
-      await batch.commit();
+      await window._runTransaction(window._db, async (transaction) => {
+        const dsRef = window._doc(window._db, 'partidas', currentPartidaId, 'draftState', 'data');
+        const draftRef = window._doc(window._db, 'partidas', currentPartidaId, 'draft', 'data');
+        const dsSnap = await transaction.get(dsRef);
+        if (!dsSnap.exists() || dsSnap.data().currentPick !== ds.currentPick) {
+          throw new Error('El estado del draft ha cambiado. Vuelve a intentarlo.');
+        }
+        transaction.set(draftRef, { [draftKey]: draft[draftKey] }, { merge: true });
+        transaction.set(dsRef, nextState);
+      });
     }
   } catch(e) {
     console.error('Error guardando pick:', e);
