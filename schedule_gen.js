@@ -1,7 +1,7 @@
 
 
 
-═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  MUNDIAL DRAFT 2026 — app.js
 //  Lógica completa de la aplicación
 // ═══════════════════════════════════════════════════════════
@@ -1127,8 +1127,6 @@ function buildKnockoutSeedMatches() {
 function buildSeedMatches() { return [...buildGroupSeedMatches(), ...buildKnockoutSeedMatches()]; }
 
 // ── ADMIN MATCH MANAGEMENT (replaces API) ──────────────────
-
-}
 const data = buildInitialAdminMatches();
 
 const groupMatches = [];
