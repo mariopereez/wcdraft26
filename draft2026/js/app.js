@@ -205,6 +205,12 @@ function formatDate(u) { return new Date(u).toLocaleDateString(currentLang === '
 function formatTime(u) { return new Date(u).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+'h'; }
 function formatDay(u)  { return new Date(u).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
 function isToday(u)    { return new Date(u).toDateString() === new Date().toDateString(); }
+function isYesterday(u) {
+  const d = new Date(u);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return d.toDateString() === yesterday.toDateString();
+}
 function setStatus(t, msg) { const b = document.getElementById('status-bar'); if(!b) return; b.className = t==='ok'?'':t; document.getElementById('status-text').textContent = msg; }
 function showMsg(id, type, text) { const el = document.getElementById(id); if(!el) return; el.className = 'msg '+type; el.textContent = text; }
 function clearMsg(id) { const el = document.getElementById(id); if(!el) return; el.className = 'msg'; el.textContent = ''; }
@@ -1865,7 +1871,7 @@ function renderResults() {
 }
 function renderTodosMatches() {
   const myTeams=getMyTeams();
-  let ms=[...matches].filter(m=>{const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');const s=todosSearch.toLowerCase();if(s&&!h.toLowerCase().includes(s)&&!a.toLowerCase().includes(s))return false;if(todosFilter==='finished')return m.status==='FINISHED';if(todosFilter==='upcoming')return m.status==='SCHEDULED'||m.status==='TIMED';if(todosFilter==='mine')return myTeams.has(h)||myTeams.has(a);if(todosFilter==='live')return (m.status==='IN_PLAY'||m.status==='PAUSED')&&!m._seed;if(todosFilter==='today')return isToday(m.utcDate)&&!m._seed&&m.status!=='SCHEDULED';return true;}).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+  let ms=[...matches].filter(m=>{const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');const s=todosSearch.toLowerCase();if(s&&!h.toLowerCase().includes(s)&&!a.toLowerCase().includes(s))return false;if(todosFilter==='finished')return m.status==='FINISHED';if(todosFilter==='upcoming')return m.status==='SCHEDULED'||m.status==='TIMED'||m.status==='IN_PLAY'||m.status==='PAUSED'||isToday(m.utcDate)||isYesterday(m.utcDate);if(todosFilter==='mine')return myTeams.has(h)||myTeams.has(a);if(todosFilter==='live')return (m.status==='IN_PLAY'||m.status==='PAUSED')&&!m._seed;if(todosFilter==='today')return isToday(m.utcDate)&&!m._seed&&m.status!=='SCHEDULED';return true;}).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
   const wrap=document.getElementById('todos-matches-list');if(!wrap)return;
   if(!ms.length){wrap.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>Sin partidos</p></div>';return;}
   const byDay={}; ms.forEach(m=>{const d=formatDay(m.utcDate);if(!byDay[d])byDay[d]=[];byDay[d].push(m);});
