@@ -1194,25 +1194,6 @@ function buildKnockoutSeedMatches() {
     ]
   };
 
-  const LAST_32_DEFAULTS = [
-    { home: 'TBD', away: 'TBD' }, // Slot 0
-    { home: 'TBD', away: 'TBD' }, // Slot 1
-    { home: 'TBD', away: 'TBD' }, // Slot 2
-    { home: 'TBD', away: 'TBD' }, // Slot 3
-    { home: 'Germany', away: 'TBD' }, // Slot 4: Alemania
-    { home: 'TBD', away: 'TBD' }, // Slot 5
-    { home: 'Mexico', away: 'TBD' }, // Slot 6: México
-    { home: 'TBD', away: 'TBD' }, // Slot 7
-    { home: 'TBD', away: 'TBD' }, // Slot 8
-    { home: 'USA', away: 'TBD' }, // Slot 9: Estados Unidos
-    { home: 'TBD', away: 'TBD' }, // Slot 10
-    { home: 'TBD', away: 'TBD' }, // Slot 11
-    { home: 'TBD', away: 'TBD' }, // Slot 12
-    { home: 'Argentina', away: 'TBD' }, // Slot 13
-    { home: 'TBD', away: 'TBD' }, // Slot 14
-    { home: 'TBD', away: 'TBD' }  // Slot 15
-  ];
-
   const stages = [
     { key: 'r16', label: 'LAST_32' },
     { key: 'r8', label: 'LAST_16' },
@@ -1226,17 +1207,12 @@ function buildKnockoutSeedMatches() {
     const schedule = KNOCKOUT_SCHEDULE[label];
     schedule.forEach(([dayOffset, hour, minute], i) => {
       const venue = getSeedVenueByIndex(vi++);
-      let home = 'TBD', away = 'TBD';
-      if (key === 'r16') {
-        home = LAST_32_DEFAULTS[i]?.home || 'TBD';
-        away = LAST_32_DEFAULTS[i]?.away || 'TBD';
-      }
       ms.push({
         id: `seed-${key}-${i+1}`,
         _seed: true,
         number: 73 + ms.length,
-        homeTeam: {name: home},
-        awayTeam: {name: away},
+        homeTeam: {name: 'TBD'},
+        awayTeam: {name: 'TBD'},
         utcDate: makeUtcIso(dayOffset, hour, minute),
         status: 'SCHEDULED',
         stage: label,
