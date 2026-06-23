@@ -100,7 +100,7 @@ let currentPartidaId = null, currentPartidaConfig = null, currentPartidaJugadore
 let PARTICIPANTES = [], PARTICIPANTES_BY_UID = {}, MULTS = [];
 let draft = {}, results = {}, draftState = { phase:'pending', orders:[], currentPick:0 };
 let calActiveFilter = 'all', calSearchVal = '', resFilter = 'all', resSearch = '';
-let resTabActive = 'todos', todosFilter = 'all', todosSearch = '';
+let resTabActive = 'todos', todosFilter = 'upcoming', todosSearch = '';
 let draftTestMode = false, draftTestPlayer = null, draftSearchSel = null;
 let clasExpandedPlayer = null, predFilterActive = 'pending', simSelections = {};
 let _yoLastHash = '', _partidaListeners = [], _salaListeners = [];
@@ -1008,7 +1008,7 @@ async function enterApp(partidaId) {
 
       const urlParams = new URLSearchParams(window.location.search);
       const pageParam = urlParams.get('page');
-      const validPages = ['home', 'draft', 'resultados', 'grupos', 'clasificacion', 'yo', 'reglas', 'admin'];
+      const validPages = ['home', 'resultados', 'grupos', 'clasificacion', 'yo', 'reglas', 'admin'];
       const targetPage = (pageParam && validPages.includes(pageParam)) ? pageParam : 'home';
 
       const btn = document.querySelector(`.tab-btn[onclick*="'${targetPage}'"]`) || 
@@ -1604,6 +1604,28 @@ function renderHome() {
   // 5. Sidebar Ranking
   const sb=document.getElementById('ranking-sidebar-body');
   if(sb) sb.innerHTML=ranking.map((r,i)=>`<div class="ranking-sidebar-row ${r.name===myName?'is-me':''}">${['🥇','🥈','🥉'][i]?`<div class="rsb-pos ${i===0?'p1':i===1?'p2':'p3'}">${['🥇','🥈','🥉'][i]}</div>`:`<div class="rsb-pos">${i+1}</div>`}${avatarEl(r.name,'',24)}<div class="rsb-name">${r.name}${r.name===myName?' ⭐':''}</div><div class="rsb-pts">${r.total}</div></div>`).join('');
+
+  if (typeof renderDraft === 'function') {
+    renderDraft();
+  }
+}
+
+let homeDraftCollapsed = true;
+function toggleHomeDraftCollapse() {
+  homeDraftCollapsed = !homeDraftCollapsed;
+  const content = document.getElementById('home-draft-content');
+  const arrow = document.getElementById('home-draft-arrow');
+  if (content) content.style.display = homeDraftCollapsed ? 'none' : 'block';
+  if (arrow) arrow.style.transform = homeDraftCollapsed ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+function updateHomeDraftCollapseState() {
+  const content = document.getElementById('home-draft-content');
+  const arrow = document.getElementById('home-draft-arrow');
+  if (draftState && draftState.phase === 'active') {
+    homeDraftCollapsed = false;
+  }
+  if (content) content.style.display = homeDraftCollapsed ? 'none' : 'block';
+  if (arrow) arrow.style.transform = homeDraftCollapsed ? 'rotate(0deg)' : 'rotate(90deg)';
 }
 
 // ── RENDER: MATCH CARD ─────────────────────────────────────
@@ -1677,6 +1699,7 @@ async function randomAssignAll() {
 function toggleTestMode() { draftTestMode=!draftTestMode; draftTestPlayer=null; renderDraft(); }
 function renderDraft() {
   if(!currentPartidaConfig) return;
+  if(typeof updateHomeDraftCollapseState === 'function') updateHomeDraftCollapseState();
   const ds=draftState; const myName=getCurrentPlayerName(); const sels=currentPartidaConfig.seleccionesPorJugador;
   const adminArea=document.getElementById('draft-admin-area');
   if(isAdmin()){const total=PARTICIPANTES.length*sels;const phaseTxt=ds.phase==='pending'?window.tr('draft_status_not_started'):ds.phase==='active'?`${window.tr("draft_pick_prefix")} ${ds.currentPick+1}/${total}`:'Completado';adminArea.innerHTML=`<div class="draft-admin-bar"><span class="draft-status-txt">${window.tr("draft_admin_title")} · ${phaseTxt}</span><div style="display:flex;gap:.4rem;flex-wrap:wrap">${ds.phase==='pending'?`<button class="btn btn-gold btn-sm" onclick="startDraft()">🎲 ${window.tr("draft_start_btn")}</button>`:`<button class="btn btn-outline btn-sm" onclick="resetDraft()">🔄 ${window.tr("draft_restart_btn")}</button>`}<button class="btn btn-outline btn-sm" onclick="randomAssignAll()">🎲 ${window.tr("draft_random_btn")}</button><button class="btn ${draftTestMode?'btn-warn':'btn-outline'} btn-sm" onclick="toggleTestMode()">🧪 ${draftTestMode?'${window.tr("draft_test_exit")}':window.tr("draft_test")}</button></div></div>`;}

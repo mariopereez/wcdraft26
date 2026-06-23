@@ -383,7 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="nav-logo">DRAFT 2026<div class="nav-partida" id="nav-partida-name"></div></div>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showPage('home',this)" data-i18n="nav_home">Inicio</button>
-    <button class="tab-btn" onclick="showPage('draft',this)" data-i18n="nav_draft">Draft</button>
     <button class="tab-btn" onclick="showPage('resultados',this)" data-i18n="nav_matches">Partidos</button>
     <button class="tab-btn" onclick="showPage('grupos',this)" data-i18n="nav_groups">Grupos</button>
     <button class="tab-btn" onclick="showPage('clasificacion',this)" data-i18n="nav_table">Clasificación</button>
@@ -410,11 +409,11 @@ document.addEventListener('DOMContentLoaded', () => {
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
     <span class="bnav-label" data-i18n="nav_matches">Partidos</span>
   </button>
-  <button class="bnav-item bnav-center" onclick="showPage('draft',this)" data-page="draft">
+  <button class="bnav-item bnav-center" onclick="showPage('grupos',this)" data-page="grupos">
     <div class="bnav-center-btn">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     </div>
-    <span class="bnav-label" data-i18n="nav_draft">Draft</span>
+    <span class="bnav-label" data-i18n="nav_groups">Grupos</span>
   </button>
   <button class="bnav-item" onclick="showPage('clasificacion',this)" data-page="clasificacion">
     <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -464,6 +463,45 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="section-title" style="margin-bottom:.7rem"><span class="accent" data-i18n="yo_teams_accent">Mis</span> <span data-i18n="yo_teams_title">Selecciones</span></div>
           <div id="home-my-teams-wrap" class="home-my-teams-wrap"></div>
         </div>
+
+        <!-- Collapsible Draft Widget -->
+        <div class="home-draft-card" id="home-draft-card" style="margin-bottom:0.4rem; margin-top:1.2rem; background:var(--surf2); border:1px solid var(--border); border-radius:14px; padding:1.2rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer" onclick="toggleHomeDraftCollapse()">
+            <div style="font-family:'Bebas Neue'; font-size:1.15rem; color:var(--white); display:flex; align-items:center; gap:0.5rem">
+              <span>🗳️</span> <span data-i18n="nav_draft">Draft</span>
+            </div>
+            <div id="home-draft-arrow" style="font-size:0.8rem; color:var(--muted); transition: transform 0.2s">▶</div>
+          </div>
+          <div id="home-draft-content" style="display:none; margin-top:1.2rem">
+            <div style="display:flex;flex-direction:column;gap:.8rem">
+              <div id="draft-admin-area"></div>
+              <div style="display:flex;justify-content:flex-end">
+                <button class="btn btn-outline btn-sm" onclick="showDraftTimeline()" id="timeline-btn" style="display:none">Historial</button>
+              </div>
+              <div id="draft-timeline-wrap" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem">
+                  <div class="section-title" style="margin:0"><span class="accent">Historial</span> del Draft</div>
+                  <button class="btn btn-outline btn-sm" onclick="hideDraftTimeline()">Cerrar</button>
+                </div>
+                <div id="draft-timeline-content"></div>
+              </div>
+              <div id="draft-order-area"></div>
+              <div class="draft-main">
+                <div style="display:flex;flex-direction:column;gap:.8rem">
+                  <div id="draft-pick-area"></div>
+                  <div class="draft-available-panel" id="draft-available-panel" style="display:none">
+                    <div class="draft-avail-title">Selecciones disponibles</div>
+                    <div class="draft-avail-grid" id="draft-avail-grid"></div>
+                  </div>
+                </div>
+                <div class="draft-picks-list">
+                  <div class="draft-picks-title" data-i18n="draft_picks_log">Elecciones por jugador</div>
+                  <div id="draft-picks-log"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div class="home-right">
@@ -482,35 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 
   <!-- DRAFT -->
-  <div id="page-draft" class="page">
-    <div style="display:flex;flex-direction:column;gap:.8rem">
-      <div id="draft-admin-area"></div>
-      <div style="display:flex;justify-content:flex-end">
-        <button class="btn btn-outline btn-sm" onclick="showDraftTimeline()" id="timeline-btn" style="display:none">Historial</button>
-      </div>
-      <div id="draft-timeline-wrap" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem">
-          <div class="section-title" style="margin:0"><span class="accent">Historial</span> del Draft</div>
-          <button class="btn btn-outline btn-sm" onclick="hideDraftTimeline()">Cerrar</button>
-        </div>
-        <div id="draft-timeline-content"></div>
-      </div>
-      <div id="draft-order-area"></div>
-      <div class="draft-main">
-        <div style="display:flex;flex-direction:column;gap:.8rem">
-          <div id="draft-pick-area"></div>
-          <div class="draft-available-panel" id="draft-available-panel" style="display:none">
-            <div class="draft-avail-title">Selecciones disponibles</div>
-            <div class="draft-avail-grid" id="draft-avail-grid"></div>
-          </div>
-        </div>
-        <div class="draft-picks-list">
-          <div class="draft-picks-title" data-i18n="draft_picks_log">Elecciones por jugador</div>
-          <div id="draft-picks-log"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div id="page-draft" class="page"></div>
 
   <!-- RESULTADOS -->
   <div id="page-resultados" class="page">
@@ -539,9 +549,9 @@ document.addEventListener('DOMContentLoaded', () => {
     <div id="res-todos-wrap">
       <div class="cal-filters" style="margin-bottom:.8rem">
         <input class="cal-search" type="text" placeholder="Buscar equipo..." data-i18n-placeholder="search_team" oninput="filterTodosMatches(this.value)"/>
-        <button class="chip active" onclick="filterTodosChip(this,'all')" data-i18n="filter_all">Todos</button>
+        <button class="chip" onclick="filterTodosChip(this,'all')" data-i18n="filter_all">Todos</button>
         <button class="chip" onclick="filterTodosChip(this,'finished')" data-i18n="filter_finished">Finalizados</button>
-        <button class="chip" onclick="filterTodosChip(this,'upcoming')" data-i18n="filter_upcoming">Pendientes</button>
+        <button class="chip active" onclick="filterTodosChip(this,'upcoming')" data-i18n="filter_upcoming">Pendientes</button>
         <button class="chip" onclick="filterTodosChip(this,'mine')" data-i18n="filter_mine">Mis equipos</button>
         <button class="chip" onclick="filterTodosChip(this,'live')" data-i18n="filter_live">En juego</button>
         <button class="chip" onclick="filterTodosChip(this,'today')" data-i18n="filter_today">Hoy</button>
