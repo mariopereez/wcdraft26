@@ -1340,16 +1340,57 @@ async function autoSyncFromMatches() {
     if(gh>ga){tally[h].pg++;tally[a].pd++;}else if(ga>gh){tally[a].pg++;tally[h].pd++;}else{tally[h].pe++;tally[a].pe++;}
   });
   for(const [t,v] of Object.entries(tally)){if(!results[t])continue;if(results[t].pg!==v.pg||results[t].pe!==v.pe||results[t].pd!==v.pd){Object.assign(results[t],v);changed=true;}}
-  const stageMap={r16:{r16:1},r8:{r16:1,r8:1},r4:{r16:1,r8:1,r4:1},semi:{r16:1,r8:1,r4:1,semi:1},final:{r16:1,r8:1,r4:1,semi:1,final:1}};
+  
   const knockoutFlags={}; ALL_TEAMS.forEach(t=>{knockoutFlags[t]={r16:0,r8:0,r4:0,semi:0,final:0,ganador:0,bronce:0};});
+  
+  // 1. Asignar r16 (5 pts) tan pronto como estén en el bracket (partidos programados o jugados de LAST_32 / r16)
+  matches.forEach(m => {
+    const sk = normalizeMatchStage(m.stage);
+    if (sk === 'r16') {
+      [nameES(m.homeTeam?.name||''), nameES(m.awayTeam?.name||'')].forEach(team => {
+        if (ALL_TEAMS.includes(team)) {
+          knockoutFlags[team].r16 = 1;
+        }
+      });
+    }
+  });
+
+  // 2. Asignar puntos subsiguientes al finalizar el partido calificador (anterior)
   finished.forEach(m=>{
     const sk=normalizeMatchStage(m.stage);
-    if(!['r16','r8','r4','semi','final','third'].includes(sk))return;
-    [nameES(m.homeTeam?.name||''),nameES(m.awayTeam?.name||'')].forEach(team=>{if(!ALL_TEAMS.includes(team))return;Object.assign(knockoutFlags[team],stageMap[sk]||{});});
-    const winner=getMatchWinnerTeamName(m);if(!winner||!ALL_TEAMS.includes(winner))return;
-    if(sk==='final') knockoutFlags[winner].ganador=1;
-    if(sk==='third') knockoutFlags[winner].bronce=1;
+    const winner=getMatchWinnerTeamName(m);
+    if(!winner||!ALL_TEAMS.includes(winner))return;
+
+    if (sk === 'r16') {
+      knockoutFlags[winner].r16 = 1;
+      knockoutFlags[winner].r8 = 1;
+    } else if (sk === 'r8') {
+      knockoutFlags[winner].r16 = 1;
+      knockoutFlags[winner].r8 = 1;
+      knockoutFlags[winner].r4 = 1;
+    } else if (sk === 'r4') {
+      knockoutFlags[winner].r16 = 1;
+      knockoutFlags[winner].r8 = 1;
+      knockoutFlags[winner].r4 = 1;
+      knockoutFlags[winner].semi = 1;
+    } else if (sk === 'semi') {
+      knockoutFlags[winner].r16 = 1;
+      knockoutFlags[winner].r8 = 1;
+      knockoutFlags[winner].r4 = 1;
+      knockoutFlags[winner].semi = 1;
+      knockoutFlags[winner].final = 1;
+    } else if (sk === 'final') {
+      knockoutFlags[winner].r16 = 1;
+      knockoutFlags[winner].r8 = 1;
+      knockoutFlags[winner].r4 = 1;
+      knockoutFlags[winner].semi = 1;
+      knockoutFlags[winner].final = 1;
+      knockoutFlags[winner].ganador = 1;
+    } else if (sk === 'third') {
+      knockoutFlags[winner].bronce = 1;
+    }
   });
+
   for(const team of ALL_TEAMS){if(!results[team])continue;const fields=['r16','r8','r4','semi','final','ganador','bronce'];let diff=false;fields.forEach(f=>{const nv=knockoutFlags[team]?.[f]||0;if(results[team][f]!==nv){results[team][f]=nv;diff=true;}});if(diff)changed=true;}
   if(changed) await pushResults();
 }
