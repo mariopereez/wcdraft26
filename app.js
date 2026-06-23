@@ -1176,18 +1176,83 @@ function buildGroupSeedMatches() {
   });
   return ms;
 }
+const KO_ADMIN_MATCH_LABELS = {
+  r16: [
+    "Dieciseisavos 1: 2º A vs 2º B (Dom 28 Jun 21:00)",
+    "Dieciseisavos 2: 1º F vs 2º C (Mar 30 Jun 03:00)",
+    "Dieciseisavos 3: 1º C vs 2º F (Lun 29 Jun 19:00)",
+    "Dieciseisavos 4: 1º I vs 3º C/D/F/... (Mar 30 Jun 23:00)",
+    "Dieciseisavos 5: Alemania vs 3º A/B/C/D (Lun 29 Jun 22:30)",
+    "Dieciseisavos 6: 2º E vs 2º I (Mar 30 Jun 19:00)",
+    "Dieciseisavos 7: México vs 3º C/E/F/... (Mié 1 Jul 03:00)",
+    "Dieciseisavos 8: 1º L vs 3º E/H/I/J... (Mié 1 Jul 18:00)",
+    "Dieciseisavos 9: 1º G vs 3º A/E/H/... (Mié 1 Jul 22:00)",
+    "Dieciseisavos 10: Estados Unidos vs 3º B/E/F/I... (Jue 2 Jul 02:00)",
+    "Dieciseisavos 11: 1º H vs 2º J (Jue 2 Jul 21:00)",
+    "Dieciseisavos 12: 2º K vs 2º L (Vie 3 Jul 01:00)",
+    "Dieciseisavos 13: 1º B vs 3º E/F/G/I... (Vie 3 Jul 05:00)",
+    "Dieciseisavos 14: Argentina vs 2º H (Sáb 4 Jul 00:00)",
+    "Dieciseisavos 15: 2º D vs 2º G (Vie 3 Jul 20:00)",
+    "Dieciseisavos 16: 1º K vs 3º D/E/I/J... (Sáb 4 Jul 03:30)"
+  ],
+  r8: [
+    "Octavos 1: G. Dieciseisavos 1 vs G. Dieciseisavos 2 (Sáb 4 Jul 19:00)",
+    "Octavos 2: G. Dieciseisavos 3 vs G. Dieciseisavos 4 (Sáb 4 Jul 23:00)",
+    "Octavos 3: G. Dieciseisavos 5 vs G. Dieciseisavos 6 (Dom 5 Jul 22:00)",
+    "Octavos 4: G. Dieciseisavos 7 vs G. Dieciseisavos 8 (Lun 6 Jul 02:00)",
+    "Octavos 5: G. Dieciseisavos 9 vs G. Dieciseisavos 10 (Mar 7 Jul 02:00)",
+    "Octavos 6: G. Dieciseisavos 11 vs G. Dieciseisavos 12 (Lun 6 Jul 21:00)",
+    "Octavos 7: G. Dieciseisavos 13 vs G. Dieciseisavos 14 (Mar 7 Jul 22:00)",
+    "Octavos 8: G. Dieciseisavos 15 vs G. Dieciseisavos 16 (Mar 7 Jul 18:00)"
+  ],
+  r4: [
+    "Cuartos 1: G. Octavos 1 vs G. Octavos 2 (Jue 9 Jul 22:00)",
+    "Cuartos 2: G. Octavos 3 vs G. Octavos 4 (Vie 10 Jul 21:00)",
+    "Cuartos 3: G. Octavos 5 vs G. Octavos 6 (Sáb 11 Jul 23:00)",
+    "Cuartos 4: G. Octavos 7 vs G. Octavos 8 (Dom 12 Jul 03:00)"
+  ],
+  semi: [
+    "Semifinal 1: G. Cuartos 1 vs G. Cuartos 2 (Mar 14 Jul 21:00)",
+    "Semifinal 2: G. Cuartos 3 vs G. Cuartos 4 (Mié 15 Jul 21:00)"
+  ],
+  third: [
+    "Tercer Puesto: P. Semifinal 1 vs P. Semifinal 2 (Sáb 18 Jul 23:00)"
+  ],
+  final: [
+    "Gran Final: G. Semifinal 1 vs G. Semifinal 2 (Dom 19 Jul 21:00)"
+  ]
+};
+
 function buildKnockoutSeedMatches() {
   const ms=[]; let vi=72;
   const KNOCKOUT_SCHEDULE = {
     'LAST_32': [
-      [17, 19, 0], [18, 17, 0], [18, 20, 30], [19, 1, 0],
-      [19, 17, 0], [19, 21, 0], [20, 1, 0], [20, 16, 0],
-      [20, 20, 0], [21, 0, 0], [21, 19, 0], [21, 23, 0],
-      [22, 3, 0], [22, 18, 0], [22, 22, 0], [23, 1, 30]
+      [17, 19, 0],  // Slot 0 (Dom 28 Jun 21:00)
+      [19, 1, 0],   // Slot 1 (Mar 30 Jun 03:00)
+      [18, 17, 0],  // Slot 2 (Lun 29 Jun 19:00)
+      [19, 21, 0],  // Slot 3 (Mar 30 Jun 23:00)
+      [18, 20, 30], // Slot 4 (Lun 29 Jun 22:30)
+      [19, 17, 0],  // Slot 5 (Mar 30 Jun 19:00)
+      [20, 1, 0],   // Slot 6 (Mié 1 Jul 03:00)
+      [20, 16, 0],  // Slot 7 (Mié 1 Jul 18:00)
+      [20, 20, 0],  // Slot 8 (Mié 1 Jul 22:00)
+      [21, 0, 0],   // Slot 9 (Jue 2 Jul 02:00)
+      [21, 19, 0],  // Slot 10 (Jue 2 Jul 21:00)
+      [21, 23, 0],  // Slot 11 (Vie 3 Jul 01:00)
+      [22, 3, 0],   // Slot 12 (Vie 3 Jul 05:00)
+      [22, 22, 0],  // Slot 13 (Sáb 4 Jul 00:00)
+      [22, 18, 0],  // Slot 14 (Vie 3 Jul 20:00)
+      [23, 1, 30]   // Slot 15 (Sáb 4 Jul 03:30)
     ],
     'LAST_16': [
-      [23, 17, 0], [23, 21, 0], [24, 20, 0], [25, 0, 0],
-      [25, 19, 0], [26, 0, 0], [26, 16, 0], [26, 20, 0]
+      [23, 17, 0], // Slot 0 (Sáb 4 Jul 19:00)
+      [23, 21, 0], // Slot 1 (Sáb 4 Jul 23:00)
+      [24, 20, 0], // Slot 2 (Dom 5 Jul 22:00)
+      [25, 0, 0],  // Slot 3 (Lun 6 Jul 02:00)
+      [26, 0, 0],  // Slot 4 (Mar 7 Jul 02:00)
+      [25, 19, 0], // Slot 5 (Lun 6 Jul 21:00)
+      [26, 20, 0], // Slot 6 (Mar 7 Jul 22:00)
+      [26, 16, 0]  // Slot 7 (Mar 7 Jul 18:00)
     ],
     'QUARTER_FINALS': [
       [28, 20, 0], [29, 19, 0], [30, 21, 0], [31, 1, 0]
@@ -1203,6 +1268,25 @@ function buildKnockoutSeedMatches() {
     ]
   };
 
+  const LAST_32_DEFAULTS = [
+    { home: 'TBD', away: 'TBD' }, // Slot 0
+    { home: 'TBD', away: 'TBD' }, // Slot 1
+    { home: 'TBD', away: 'TBD' }, // Slot 2
+    { home: 'TBD', away: 'TBD' }, // Slot 3
+    { home: 'Germany', away: 'TBD' }, // Slot 4: Alemania
+    { home: 'TBD', away: 'TBD' }, // Slot 5
+    { home: 'Mexico', away: 'TBD' }, // Slot 6: México
+    { home: 'TBD', away: 'TBD' }, // Slot 7
+    { home: 'TBD', away: 'TBD' }, // Slot 8
+    { home: 'USA', away: 'TBD' }, // Slot 9: Estados Unidos
+    { home: 'TBD', away: 'TBD' }, // Slot 10
+    { home: 'TBD', away: 'TBD' }, // Slot 11
+    { home: 'TBD', away: 'TBD' }, // Slot 12
+    { home: 'Argentina', away: 'TBD' }, // Slot 13
+    { home: 'TBD', away: 'TBD' }, // Slot 14
+    { home: 'TBD', away: 'TBD' }  // Slot 15
+  ];
+
   const stages = [
     { key: 'r16', label: 'LAST_32' },
     { key: 'r8', label: 'LAST_16' },
@@ -1216,12 +1300,17 @@ function buildKnockoutSeedMatches() {
     const schedule = KNOCKOUT_SCHEDULE[label];
     schedule.forEach(([dayOffset, hour, minute], i) => {
       const venue = getSeedVenueByIndex(vi++);
+      let home = 'TBD', away = 'TBD';
+      if (key === 'r16') {
+        home = LAST_32_DEFAULTS[i]?.home || 'TBD';
+        away = LAST_32_DEFAULTS[i]?.away || 'TBD';
+      }
       ms.push({
         id: `seed-${key}-${i+1}`,
         _seed: true,
         number: 73 + ms.length,
-        homeTeam: {name: 'TBD'},
-        awayTeam: {name: 'TBD'},
+        homeTeam: {name: home},
+        awayTeam: {name: away},
         utcDate: makeUtcIso(dayOffset, hour, minute),
         status: 'SCHEDULED',
         stage: label,
@@ -2058,7 +2147,11 @@ function renderAdminKnockout(cont) {
       ${rMatches.slice(0, count).map((m, i) => {
         const statusClass = m.status === 'FINISHED' ? 'st-finished' : m.status === 'IN_PLAY' ? 'st-live' : 'st-scheduled';
         const statusLabel = m.status === 'FINISHED' ? '✅ FIN' : m.status === 'IN_PLAY' ? '🔴 LIVE' : '⏳ PROG';
-        return `<div class="admin-match-row admin-ko-row">
+        const labelText = KO_ADMIN_MATCH_LABELS[key]?.[i] || `${label} - Partido ${i + 1}`;
+        return `<div class="admin-match-row admin-ko-row" style="flex-wrap: wrap; gap: 0.5rem; justify-content: center; background: rgba(255,255,255,0.02); padding: 0.8rem; margin: 0.5rem 0; border-radius: 8px;">
+          <div style="width: 100%; text-align: center; font-size: 0.72rem; color: var(--gold); font-family: 'Barlow Condensed'; font-weight: 700; margin-bottom: 0.3rem;">
+            ${labelText}
+          </div>
           <select class="admin-team-select" id="admin-k-${key}-${i}-home">
             <option value="" ${!m.home ? 'selected' : ''}>— TBD —</option>
             ${ALL_TEAMS.map(t => `<option value="${t}" ${m.home === t ? 'selected' : ''}>${window.tr("country_" + t)}</option>`).join('')}
