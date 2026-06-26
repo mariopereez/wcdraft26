@@ -2023,9 +2023,7 @@ function switchResTab(tab, btn) {
   const resGruposFilters = document.getElementById('res-grupos-filters'); if(resGruposFilters) resGruposFilters.style.display = tab==='grupos'?'flex':'none';
   const resultsGrid = document.getElementById('results-grid'); if(resultsGrid) resultsGrid.style.display = tab==='grupos'?'grid':'none';
   const resTodosWrap = document.getElementById('res-todos-wrap'); if(resTodosWrap) resTodosWrap.style.display = tab==='todos'?'block':'none';
-  const resPredsWrap = document.getElementById('res-predicciones-wrap'); if(resPredsWrap) resPredsWrap.style.display = tab==='predicciones'?'block':'none';
   if(tab==='todos') renderTodosMatches();
-  else if(tab==='predicciones') renderPrediccionesTab();
 }
 function getTeamMatches(t) { return matches.filter(m=>{const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');return h===t||a===t;}).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate)); }
 function renderResults() {
@@ -2033,11 +2031,9 @@ function renderResults() {
   const banner=document.getElementById('res-admin-banner');
   if(banner) banner.innerHTML='';
   if(resTabActive==='todos'){renderTodosMatches();return;}
-  if(resTabActive==='predicciones'){renderPrediccionesTab();return;}
   document.getElementById('res-grupos-filters').style.display='flex';
   document.getElementById('results-grid').style.display='grid';
   document.getElementById('res-todos-wrap').style.display='none';
-  const resPredsWrap = document.getElementById('res-predicciones-wrap'); if(resPredsWrap) resPredsWrap.style.display='none';
   const teams=ALL_TEAMS.filter(t=>{if(resFilter==='active')return teamGroupPts(t)+teamElimRaw(t)>0;if(resFilter==='mis')return myTeamSet.has(t);return true;}).filter(t=>t.toLowerCase().includes(resSearch.toLowerCase()));
   document.getElementById('results-grid').innerHTML=teams.map(t=>{
     const r=results[t]||{}; const gp=teamGroupPts(t),ep=teamElimRaw(t);
@@ -2772,8 +2768,71 @@ window.savePrediccion = async function(mId) {
 };
 
 window.renderPorraCardHtml = function() {
+  let histHtml = `<div class="section-title" style="margin-top:1.5rem; margin-bottom:1rem">🏆 <span class="accent">Historial</span> de Predicciones Acertadas</div>`;
+  histHtml += `<div style="display:flex; flex-direction:column; gap:1rem">`;
+  
+  const playersHist = PARTICIPANTES.map(p => {
+    const uid = Object.keys(PARTICIPANTES_BY_UID).find(k => PARTICIPANTES_BY_UID[k] === p);
+    const pMatches = Object.assign({}, 
+      (uid && window._predicciones && window._predicciones[uid]?.matches) || {}, 
+      (uid && typeof currentPartidaJugadores !== 'undefined' && currentPartidaJugadores[uid]?.predicciones?.matches) || {}
+    );
+    let pts = 0;
+    const aciertos = [];
+    Object.entries(pMatches).forEach(([mid, pred]) => {
+      const matchObj = typeof matches !== 'undefined' ? matches.find(x => String(x.id) === String(mid)) : null;
+      if (matchObj && matchObj.status === 'FINISHED' && matchObj.score?.fullTime?.home != null) {
+        if (matchObj.score.fullTime.home === pred.h && matchObj.score.fullTime.away === pred.a) {
+          pts += 2;
+          aciertos.push({ m: matchObj, pred });
+        }
+      }
+    });
+    return { p, pts, aciertos };
+  }).sort((a,b) => b.pts - a.pts);
+
+  playersHist.forEach(({ p, pts, aciertos }) => {
+    let aciertosHtml = '';
+    if (aciertos.length > 0) {
+      aciertosHtml = `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:.6rem; margin-top:.8rem">` + 
+        aciertos.map(({ m: matchObj, pred }) => {
+          const hName = window.tr("country_" + (typeof nameES !== 'undefined' ? nameES(matchObj.homeTeam?.name||'') : matchObj.homeTeam?.name));
+          const aName = window.tr("country_" + (typeof nameES !== 'undefined' ? nameES(matchObj.awayTeam?.name||'') : matchObj.awayTeam?.name));
+          const hImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(matchObj.homeTeam?.name||'') : matchObj.homeTeam?.name), 'md') : '';
+          const aImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(matchObj.awayTeam?.name||'') : matchObj.awayTeam?.name), 'md') : '';
+          return `<div style="background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:.6rem .8rem; display:flex; flex-direction:column; gap:.4rem">
+            <div style="display:flex; align-items:center; justify-content:space-between; font-family:'Barlow Condensed'; font-size:.8rem; font-weight:700; color:var(--white)">
+              <div style="display:flex; align-items:center; gap:.3rem">${hImg} <span>${hName}</span></div>
+              <div style="display:flex; align-items:center; gap:.3rem"><span>${aName}</span> ${aImg}</div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(42,54,80,.2); padding-top:.4rem">
+              <span style="font-family:'Bebas Neue'; font-size:1.1rem; color:var(--gold)">${pred.h} - ${pred.a}</span>
+              <span style="font-family:'Barlow Condensed'; font-size:.7rem; font-weight:700; background:rgba(46,196,182,0.15); color:var(--cyan); padding:.1rem .4rem; border-radius:4px">+2 pts</span>
+            </div>
+          </div>`;
+        }).join('') + `</div>`;
+    } else {
+      aciertosHtml = `<div style="margin-top:.8rem; font-family:'Barlow Condensed'; font-size:.8rem; color:var(--muted); font-style:italic; padding:.4rem 0">Aún no hay predicciones acertadas.</div>`;
+    }
+
+    histHtml += `<div style="background:var(--surf2); border:1px solid var(--border); border-radius:12px; padding:1rem 1.2rem">
+      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(42,54,80,.3); padding-bottom:.6rem">
+        <div style="display:flex; align-items:center; gap:.6rem">
+          ${typeof avatarEl !== 'undefined' ? avatarEl(p, '', 32) : ''}
+          <span style="font-family:'Barlow Condensed'; font-size:1.1rem; font-weight:700; color:var(--white)">${p}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:.5rem">
+          <span style="font-family:'Barlow Condensed'; font-size:.85rem; color:var(--muted)">${aciertos.length} acierto${aciertos.length===1?'':'s'}</span>
+          <span style="font-family:'Bebas Neue'; font-size:1.3rem; color:var(--gold); background:rgba(245,197,24,.1); padding:.1rem .6rem; border-radius:6px">${pts} PTS</span>
+        </div>
+      </div>
+      ${aciertosHtml}
+    </div>`;
+  });
+  histHtml += `</div>`;
+
   const m = window.getPartidoDelDia();
-  if(!m) return '';
+  if(!m) return histHtml;
   const isTimeClosed = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED';
   
   let userPred = null;
@@ -2881,146 +2940,9 @@ window.renderPorraCardHtml = function() {
     }
   }
 
-  return baseHtml + othersHtml + `</div>`;
+  return baseHtml + othersHtml + `</div>` + histHtml;
 };
 
-function renderPrediccionesTab() {
-  const cont = document.getElementById('preds-overall-container');
-  if(!cont) return;
-  const m = window.getPartidoDelDia();
-  let html = '';
-  if(!m) {
-    html += '<div class="empty-state" style="margin-bottom:2rem"><div class="icon">🔮</div><p>No hay partido del día activo para predecir.</p></div>';
-  } else {
-    const hName = window.tr("country_" + (nameES(m.homeTeam?.name||'')));
-    const aName = window.tr("country_" + (nameES(m.awayTeam?.name||'')));
-    const hImg = flagImg(nameES(m.homeTeam?.name||''), 'md');
-    const aImg = flagImg(nameES(m.awayTeam?.name||''), 'md');
-
-    const preds = [];
-    if (typeof currentPartidaJugadores !== 'undefined' && currentPartidaJugadores) {
-      Object.entries(currentPartidaJugadores).forEach(([uid, jug]) => {
-        const pMatches = Object.assign({}, 
-          (window._predicciones && window._predicciones[uid]?.matches) || {}, 
-          (jug.predicciones?.matches) || {}
-        );
-        const p = pMatches[m.id];
-        if(p) {
-          preds.push({ name: jug.displayName || '—', h: p.h, a: p.a, ts: p.ts });
-        }
-      });
-    }
-
-    preds.sort((a,b) => b.ts - a.ts);
-
-    html += `
-      <div style="background:var(--surf2); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:2rem">
-          <div style="display:flex; align-items:center; justify-content:center; gap:1.5rem; margin-bottom:1.5rem">
-              <div style="text-align:center; flex:1">
-                  ${flagImg(nameES(m.homeTeam?.name||''), 'xl')}
-                  <div style="font-family:'Bebas Neue'; font-size:1.2rem; color:var(--white); margin-top:.4rem">${hName}</div>
-              </div>
-              <div style="font-family:'Bebas Neue'; font-size:1.8rem; color:var(--gold)">VS</div>
-              <div style="text-align:center; flex:1">
-                  ${flagImg(nameES(m.awayTeam?.name||''), 'xl')}
-                  <div style="font-family:'Bebas Neue'; font-size:1.2rem; color:var(--white); margin-top:.4rem">${aName}</div>
-              </div>
-          </div>
-          <div style="text-align:center; font-family:'Barlow Condensed'; font-size:.85rem; color:var(--muted)">
-              ${window.tr("porra_desc")}
-          </div>
-      </div>
-
-      <div class="section-title" style="margin-bottom:1rem">👥 <span class="accent">Pronósticos</span> del grupo</div>
-      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:.8rem; margin-bottom:2rem">
-          ${preds.length > 0 ? preds.map(p => `
-              <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:.8rem; display:flex; flex-direction:column; align-items:center; gap:.5rem">
-                  <div style="font-family:'Barlow Condensed'; font-weight:700; font-size:.85rem; color:var(--white); border-bottom:1px solid var(--border); width:100%; text-align:center; padding-bottom:.4rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
-                      ${p.name}
-                  </div>
-                  <div style="font-family:'Bebas Neue'; font-size:1.6rem; color:var(--gold); display:flex; align-items:center; gap:.4rem">
-                      <span>${p.h}</span>
-                      <span style="font-size:1rem; opacity:.5">—</span>
-                      <span>${p.a}</span>
-                  </div>
-                  <div style="font-size:.6rem; color:var(--muted2); font-family:'Barlow Condensed'">
-                      ${new Date(p.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-                  </div>
-              </div>
-          `).join('') : `
-              <div style="grid-column: 1 / -1; text-align:center; padding:3rem 1rem; color:var(--muted2); font-family:'Barlow Condensed'; background:var(--surf2); border-radius:12px; border:1px dashed var(--border2)">
-                  Nadie ha hecho su apuesta todavía. ¡Sé el primero!
-              </div>
-          `}
-      </div>
-    `;
-  }
-
-  let histHtml = `<div class="section-title" style="margin-top:1rem; margin-bottom:1rem">🏆 <span class="accent">Historial</span> de Predicciones Acertadas</div>`;
-  histHtml += `<div style="display:flex; flex-direction:column; gap:1rem">`;
-  
-  const playersHist = PARTICIPANTES.map(p => {
-    const uid = Object.keys(PARTICIPANTES_BY_UID).find(k => PARTICIPANTES_BY_UID[k] === p);
-    const pMatches = Object.assign({}, 
-      (uid && window._predicciones && window._predicciones[uid]?.matches) || {}, 
-      (uid && typeof currentPartidaJugadores !== 'undefined' && currentPartidaJugadores[uid]?.predicciones?.matches) || {}
-    );
-    let pts = 0;
-    const aciertos = [];
-    Object.entries(pMatches).forEach(([mid, pred]) => {
-      const m = typeof matches !== 'undefined' ? matches.find(x => String(x.id) === String(mid)) : null;
-      if (m && m.status === 'FINISHED' && m.score?.fullTime?.home != null) {
-        if (m.score.fullTime.home === pred.h && m.score.fullTime.away === pred.a) {
-          pts += 2;
-          aciertos.push({ m, pred });
-        }
-      }
-    });
-    return { p, pts, aciertos };
-  }).sort((a,b) => b.pts - a.pts);
-
-  playersHist.forEach(({ p, pts, aciertos }) => {
-    let aciertosHtml = '';
-    if (aciertos.length > 0) {
-      aciertosHtml = `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:.6rem; margin-top:.8rem">` + 
-        aciertos.map(({ m, pred }) => {
-          const hName = window.tr("country_" + (typeof nameES !== 'undefined' ? nameES(m.homeTeam?.name||'') : m.homeTeam?.name));
-          const aName = window.tr("country_" + (typeof nameES !== 'undefined' ? nameES(m.awayTeam?.name||'') : m.awayTeam?.name));
-          const hImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.homeTeam?.name||'') : m.homeTeam?.name), 'md') : '';
-          const aImg = typeof flagImg !== 'undefined' ? flagImg((typeof nameES !== 'undefined' ? nameES(m.awayTeam?.name||'') : m.awayTeam?.name), 'md') : '';
-          return `<div style="background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:.6rem .8rem; display:flex; flex-direction:column; gap:.4rem">
-            <div style="display:flex; align-items:center; justify-content:space-between; font-family:'Barlow Condensed'; font-size:.8rem; font-weight:700; color:var(--white)">
-              <div style="display:flex; align-items:center; gap:.3rem">${hImg} <span>${hName}</span></div>
-              <div style="display:flex; align-items:center; gap:.3rem"><span>${aName}</span> ${aImg}</div>
-            </div>
-            <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(42,54,80,.2); padding-top:.4rem">
-              <span style="font-family:'Bebas Neue'; font-size:1.1rem; color:var(--gold)">${pred.h} - ${pred.a}</span>
-              <span style="font-family:'Barlow Condensed'; font-size:.7rem; font-weight:700; background:rgba(46,196,182,0.15); color:var(--cyan); padding:.1rem .4rem; border-radius:4px">+2 pts</span>
-            </div>
-          </div>`;
-        }).join('') + `</div>`;
-    } else {
-      aciertosHtml = `<div style="margin-top:.8rem; font-family:'Barlow Condensed'; font-size:.8rem; color:var(--muted); font-style:italic; padding:.4rem 0">Aún no hay predicciones acertadas.</div>`;
-    }
-
-    histHtml += `<div style="background:var(--surf2); border:1px solid var(--border); border-radius:12px; padding:1rem 1.2rem">
-      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(42,54,80,.3); padding-bottom:.6rem">
-        <div style="display:flex; align-items:center; gap:.6rem">
-          ${typeof avatarEl !== 'undefined' ? avatarEl(p, '', 32) : ''}
-          <span style="font-family:'Barlow Condensed'; font-size:1.1rem; font-weight:700; color:var(--white)">${p}</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:.5rem">
-          <span style="font-family:'Barlow Condensed'; font-size:.85rem; color:var(--muted)">${aciertos.length} acierto${aciertos.length===1?'':'s'}</span>
-          <span style="font-family:'Bebas Neue'; font-size:1.3rem; color:var(--gold); background:rgba(245,197,24,.1); padding:.1rem .6rem; border-radius:6px">${pts} PTS</span>
-        </div>
-      </div>
-      ${aciertosHtml}
-    </div>`;
-  });
-  histHtml += `</div>`;
-
-  cont.innerHTML = html + histHtml;
-}
 
 window.renderSuperAdminPorraHtml = function() {
   if (typeof matches === 'undefined' || !matches || !matches.length) return '';
