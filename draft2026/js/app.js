@@ -1988,7 +1988,7 @@ function filterResults(v) { resSearch=v; renderResults(); }
 function filterChip(el, f) { document.querySelectorAll('#res-grupos-filters .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); resFilter=f; renderResults(); }
 
 // ── RENDER: GRUPOS & MUNDIAL ───────────────────────────────
-let mundialTabActive = 'grupos';
+let mundialTabActive = 'eliminatoria';
 function switchMundialTab(tab, btn) {
   document.querySelectorAll('#page-grupos .res-tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); mundialTabActive=tab;
   document.getElementById('grupos-wrap').style.display = tab==='grupos'?'grid':'none';
