@@ -2768,8 +2768,12 @@ window.savePrediccion = async function(mId) {
 };
 
 window.renderPorraCardHtml = function() {
-  let histHtml = `<div class="section-title" style="margin-top:1.5rem; margin-bottom:1rem">🏆 <span class="accent">Historial</span> de Predicciones Acertadas</div>`;
-  histHtml += `<div style="display:flex; flex-direction:column; gap:1rem">`;
+  let histHtml = `<details style="margin-top:1.5rem; border-top:1px solid rgba(230,183,17,0.3); padding-top:1rem">
+    <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; font-family:'Barlow Condensed'; font-size:1.05rem; font-weight:700; color:var(--gold); padding:0.6rem 1rem; background:rgba(230,183,17,0.15); border-radius:8px; border:1px solid rgba(230,183,17,0.25); box-shadow:0 2px 6px rgba(0,0,0,0.1)">
+      <span style="display:flex; align-items:center; gap:0.5rem">🏆 HISTORIAL DE PREDICCIONES ACERTADAS</span>
+      <span style="font-size:0.85rem; opacity:0.8">▼</span>
+    </summary>
+    <div style="margin-top:1.2rem; display:flex; flex-direction:column; gap:1rem">`;
   
   const playersHist = PARTICIPANTES.map(p => {
     const uid = Object.keys(PARTICIPANTES_BY_UID).find(k => PARTICIPANTES_BY_UID[k] === p);
@@ -2829,10 +2833,12 @@ window.renderPorraCardHtml = function() {
       ${aciertosHtml}
     </div>`;
   });
-  histHtml += `</div>`;
+  histHtml += `</div></details>`;
 
   const m = window.getPartidoDelDia();
-  if(!m) return histHtml;
+  if(!m) {
+    return `<div style="background:linear-gradient(135deg, rgba(230,183,17,0.08) 0%, var(--surf2) 100%); border:1px solid rgba(230,183,17,0.4); border-radius:14px; padding:1rem 1rem; margin:0; box-shadow:0 4px 12px rgba(0,0,0,0.15)">` + histHtml + `</div>`;
+  }
   const isTimeClosed = m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'FINISHED';
   
   let userPred = null;
@@ -2940,7 +2946,7 @@ window.renderPorraCardHtml = function() {
     }
   }
 
-  return baseHtml + othersHtml + `</div>` + histHtml;
+  return baseHtml + othersHtml + histHtml + `</div>`;
 };
 
 
