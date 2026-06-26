@@ -1117,7 +1117,7 @@ function setupPartidaListeners(partidaId) {
   
   const u6 = window._onSnapshot(window._doc(window._db, 'cache', 'admin_matches'), s => {
     if (s.exists()) {
-      adminMatchesData = s.data();
+      adminMatchesData = migrateAdminMatchesData(s.data());
       matches = applyAdminDataToMatches(adminMatchesData);
       autoSyncFromMatches();
       refreshCurrentPage();
@@ -1324,6 +1324,20 @@ function buildInitialAdminMatches() {
   return { groups, knockout, updatedAt: null, updatedBy: '' };
 }
 
+function migrateAdminMatchesData(data) {
+  if (!data) return data;
+  if (data.knockout && data.knockout.r16 && data.knockout.r16.length === 16 && !data._migratedR32) {
+    const oldR16 = [...data.knockout.r16];
+    const newToOldMap = [4, 3, 0, 1, 11, 10, 9, 8, 2, 5, 6, 7, 13, 14, 12, 15];
+    data.knockout.r16 = newToOldMap.map(oldIdx => oldR16[oldIdx] || { home: '', away: '', homeScore: null, awayScore: null, status: 'SCHEDULED' });
+    data._migratedR32 = true;
+    if (typeof window._setDoc === 'function' && window._db) {
+      window._setDoc(window._doc(window._db, 'cache', 'admin_matches'), data, { merge: true }).catch(e => console.error('Error guardando migración:', e));
+    }
+  }
+  return data;
+}
+
 function applyAdminDataToMatches(adminData) {
   const seeds = buildSeedMatches();
   if (!adminData) return seeds;
@@ -1384,7 +1398,7 @@ async function loadMatches(force = false) {
   try {
     const snap = await window._getDoc(window._doc(window._db, 'cache', 'admin_matches'));
     if (snap.exists()) {
-      adminMatchesData = snap.data();
+      adminMatchesData = migrateAdminMatchesData(snap.data());
     } else {
       adminMatchesData = buildInitialAdminMatches();
     }
