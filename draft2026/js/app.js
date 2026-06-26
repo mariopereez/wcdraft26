@@ -116,7 +116,10 @@ if (!window.translations) window.translations = { es: {}, en: {} };
 
 window.tr = function(key) {
   const langDict = window.translations[currentLang] || window.translations['es'];
-  return langDict[key] || window.translations['es'][key] || key;
+  if (langDict[key]) return langDict[key];
+  if (window.translations['es'][key]) return window.translations['es'][key];
+  if (key.startsWith('country_')) return key.replace('country_', '');
+  return key;
 };
 
 window.updateLanguageUI = function() {
@@ -1211,14 +1214,32 @@ function buildKnockoutSeedMatches() {
 
   stages.forEach(({ key, label }) => {
     const schedule = KNOCKOUT_SCHEDULE[label];
+    const r16Fallbacks = [
+      { h: 'Alemania', a: '3º' },
+      { h: '1º grupo I', a: '3º' },
+      { h: 'Sudáfrica', a: 'Canadá' },
+      { h: 'Países Bajos', a: 'Marruecos' },
+      { h: '2º Grupo K', a: '2º Grupo L' },
+      { h: '1º grupo H', a: '2º grupo J' },
+      { h: 'Estados Unidos', a: 'Bosnia y Herzegovina' },
+      { h: '1º Grupo G', a: '3º' },
+      { h: 'Brasil', a: 'Japón' },
+      { h: 'Costa de Marfil', a: '2º Grupo I' },
+      { h: 'México', a: '3º' },
+      { h: '1º grupo L', a: '3º' },
+      { h: 'Argentina', a: '2º Grupo H' },
+      { h: 'Australia', a: '2º Grupo G' },
+      { h: 'Suiza', a: '3º' },
+      { h: '1º grupo K', a: '3º' }
+    ];
     schedule.forEach(([dayOffset, hour, minute], i) => {
       const venue = getSeedVenueByIndex(vi++);
       ms.push({
         id: `seed-${key}-${i+1}`,
         _seed: true,
         number: 73 + ms.length,
-        homeTeam: {name: 'TBD'},
-        awayTeam: {name: 'TBD'},
+        homeTeam: {name: key === 'r16' && r16Fallbacks[i] ? r16Fallbacks[i].h : 'TBD'},
+        awayTeam: {name: key === 'r16' && r16Fallbacks[i] ? r16Fallbacks[i].a : 'TBD'},
         utcDate: makeUtcIso(dayOffset, hour, minute),
         status: 'SCHEDULED',
         stage: label,
@@ -1252,11 +1273,31 @@ function buildInitialAdminMatches() {
 
 function migrateAdminMatchesData(data) {
   if (!data) return data;
-  if (data.knockout && data.knockout.r16 && data.knockout.r16.length === 16 && !data._migratedR32) {
-    const oldR16 = [...data.knockout.r16];
-    const newToOldMap = [4, 3, 0, 1, 11, 10, 9, 8, 2, 5, 6, 7, 13, 14, 12, 15];
-    data.knockout.r16 = newToOldMap.map(oldIdx => oldR16[oldIdx] || { home: '', away: '', homeScore: null, awayScore: null, status: 'SCHEDULED' });
+  if (data.knockout && data.knockout.r16 && data.knockout.r16.length === 16 && !data._migratedR32_v2) {
+    const expected = [
+      { h: 'Alemania', a: '' },
+      { h: '', a: '' },
+      { h: 'Sudáfrica', a: 'Canadá' },
+      { h: 'Países Bajos', a: 'Marruecos' },
+      { h: '', a: '' },
+      { h: '', a: '' },
+      { h: 'Estados Unidos', a: 'Bosnia y Herzegovina' },
+      { h: '', a: '' },
+      { h: 'Brasil', a: 'Japón' },
+      { h: 'Costa de Marfil', a: '' },
+      { h: 'México', a: '' },
+      { h: '', a: '' },
+      { h: 'Argentina', a: '' },
+      { h: 'Australia', a: '' },
+      { h: 'Suiza', a: '' },
+      { h: '', a: '' }
+    ];
+    data.knockout.r16.forEach((m, idx) => {
+      if (expected[idx].h) m.home = expected[idx].h;
+      if (expected[idx].a) m.away = expected[idx].a;
+    });
     data._migratedR32 = true;
+    data._migratedR32_v2 = true;
     if (typeof window._setDoc === 'function' && window._db) {
       window._setDoc(window._doc(window._db, 'cache', 'admin_matches'), data, { merge: true }).catch(e => console.error('Error guardando migración:', e));
     }
@@ -1302,11 +1343,31 @@ function applyAdminDataToMatches(adminData) {
     const stageName = koStageMap[key];
     if (!stageName) return;
     const seedsForStage = seeds.filter(s => s.stage === stageName);
+    const r16Fallbacks = [
+      { h: 'Alemania', a: '3º' },
+      { h: '1º grupo I', a: '3º' },
+      { h: 'Sudáfrica', a: 'Canadá' },
+      { h: 'Países Bajos', a: 'Marruecos' },
+      { h: '2º Grupo K', a: '2º Grupo L' },
+      { h: '1º grupo H', a: '2º grupo J' },
+      { h: 'Estados Unidos', a: 'Bosnia y Herzegovina' },
+      { h: '1º Grupo G', a: '3º' },
+      { h: 'Brasil', a: 'Japón' },
+      { h: 'Costa de Marfil', a: '2º Grupo I' },
+      { h: 'México', a: '3º' },
+      { h: '1º grupo L', a: '3º' },
+      { h: 'Argentina', a: '2º Grupo H' },
+      { h: 'Australia', a: '2º Grupo G' },
+      { h: 'Suiza', a: '3º' },
+      { h: '1º grupo K', a: '3º' }
+    ];
     kMatches.forEach((am, idx) => {
       if (idx >= seedsForStage.length) return;
       const seed = seedsForStage[idx];
       if (am.home) seed.homeTeam = { name: TEAM_MAP[am.home] || am.home };
+      else if (key === 'r16' && r16Fallbacks[idx]) seed.homeTeam = { name: r16Fallbacks[idx].h };
       if (am.away) seed.awayTeam = { name: TEAM_MAP[am.away] || am.away };
+      else if (key === 'r16' && r16Fallbacks[idx]) seed.awayTeam = { name: r16Fallbacks[idx].a };
       seed.status = am.status || 'SCHEDULED';
       if (am.homeScore != null && am.awayScore != null) {
         seed.score = {
@@ -1899,7 +1960,7 @@ function renderBracket() {
   bc.innerHTML=BRACKET_ROUNDS.map(({key,label,slots:slotCount})=>{
     const rms=elimMs.filter(m=>normalizeMatchStage(m.stage)===key);
     const slots=rms.length>0?rms:Array(slotCount).fill(null);
-    return `<div class="bracket-round"><div class="bracket-round-title">${label}</div>${slots.map(m=>{if(!m)return `<div class="bracket-match"><div class="bracket-match-team bracket-tbd"><span style="font-size:.68rem">${window.tr("bracket_tbd")}</span></div><div class="bracket-match-team bracket-tbd"><span style="font-size:.68rem">${window.tr("bracket_tbd")}</span></div></div>`;const h=nameES(m.homeTeam?.name||'?'),a=nameES(m.awayTeam?.name||'?');const gh=m.score?.fullTime?.home,ga=m.score?.fullTime?.away;const winner=m.status==='FINISHED'?getMatchWinnerTeamName(m):null;const ho=getOwnerData(h),ao=getOwnerData(a);return `<div class="bracket-match"><div class="bracket-match-team ${winner===h?'winner':''} ${myTeams.has(h)?'my-team':''}">${flagImg(h)} ${window.tr("country_" + h)}${ho?`<span class="bracket-owner" style="${getPlayerBadgeStyle(ho.owner)}">${ho.owner}</span>`:''}${gh!=null?`<span class="bracket-score">${gh}</span>`:''}</div><div class="bracket-match-team ${winner===a?'winner':''} ${myTeams.has(a)?'my-team':''}">${flagImg(a)} ${window.tr("country_" + a)}${ao?`<span class="bracket-owner" style="${getPlayerBadgeStyle(ao.owner)}">${ao.owner}</span>`:''}${ga!=null?`<span class="bracket-score">${ga}</span>`:''}</div></div>`;}).join('')}</div>`;
+    return `<div class="bracket-round"><div class="bracket-round-title">${label}</div><div class="bracket-round-matches">${slots.map(m=>{if(!m)return `<div class="bracket-match"><div class="bracket-match-team bracket-tbd"><span style="font-size:.68rem">${window.tr("bracket_tbd")}</span></div><div class="bracket-match-team bracket-tbd"><span style="font-size:.68rem">${window.tr("bracket_tbd")}</span></div></div>`;const h=nameES(m.homeTeam?.name||'?'),a=nameES(m.awayTeam?.name||'?');const gh=m.score?.fullTime?.home,ga=m.score?.fullTime?.away;const winner=m.status==='FINISHED'?getMatchWinnerTeamName(m):null;const ho=getOwnerData(h),ao=getOwnerData(a);return `<div class="bracket-match"><div class="bracket-match-team ${winner===h?'winner':''} ${myTeams.has(h)?'my-team':''}">${flagImg(h)} ${window.tr("country_" + h)}${ho?`<span class="bracket-owner" style="${getPlayerBadgeStyle(ho.owner)}">${ho.owner}</span>`:''}${gh!=null?`<span class="bracket-score">${gh}</span>`:''}</div><div class="bracket-match-team ${winner===a?'winner':''} ${myTeams.has(a)?'my-team':''}">${flagImg(a)} ${window.tr("country_" + a)}${ao?`<span class="bracket-owner" style="${getPlayerBadgeStyle(ao.owner)}">${ao.owner}</span>`:''}${ga!=null?`<span class="bracket-score">${ga}</span>`:''}</div></div>`;}).join('')}</div></div>`;
   }).join('');
 }
 async function adjVED(team, field, delta) {
