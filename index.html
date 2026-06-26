@@ -522,7 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="res-tabs">
       <button class="res-tab active" onclick="switchResTab('todos',this)" data-i18n="res_tab_cal">Calendario</button>
       <button class="res-tab" onclick="switchResTab('grupos',this)" data-i18n="res_tab_teams">Por equipo</button>
-      <button class="res-tab" onclick="switchResTab('eliminatoria',this)" data-i18n="res_tab_bracket">Bracket</button>
     </div>
     <div id="res-grupos-filters" class="cal-filters" style="display:none">
       <input class="cal-search" type="text" placeholder="Buscar equipo..." data-i18n-placeholder="search_team" oninput="filterResults(this.value)"/>
@@ -531,10 +530,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="chip" onclick="filterChip(this,'mis')">Mis equipos</button>
     </div>
     <div class="results-grid" id="results-grid" style="display:none"></div>
-    <div id="res-elim-wrap" style="display:none">
-      
-      <div class="bracket-wrap"><div class="bracket" id="bracket-container"></div></div>
-    </div>
     <div id="res-todos-wrap">
       <div class="cal-filters" style="margin-bottom:.8rem">
         <input class="cal-search" type="text" placeholder="Buscar equipo..." data-i18n-placeholder="search_team" oninput="filterTodosMatches(this.value)"/>
@@ -552,8 +547,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <!-- GRUPOS -->
   <div id="page-grupos" class="page">
-    <div class="section-title"><span class="accent">Fase</span> de Grupos</div>
+    <div class="section-title"><span class="accent">Mundial</span> 2026</div>
+    <div class="res-tabs">
+      <button class="res-tab active" onclick="switchMundialTab('grupos',this)" data-i18n="stage_groups">Fase de Grupos</button>
+      <button class="res-tab" onclick="switchMundialTab('eliminatoria',this)" data-i18n="res_tab_bracket">Bracket</button>
+    </div>
     <div class="grupos-grid" id="grupos-wrap"></div>
+    <div id="mundial-elim-wrap" style="display:none">
+      <div class="bracket-wrap"><div class="bracket" id="bracket-container"></div></div>
+    </div>
   </div>
 
   <!-- CLASIFICACION -->

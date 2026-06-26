@@ -1110,22 +1110,22 @@ function buildGroupSeedMatches() {
 }
 const KO_ADMIN_MATCH_LABELS = {
   r16: [
-    "Dieciseisavos 1: 2º A vs 2º B (Dom 28 Jun 21:00)",
-    "Dieciseisavos 2: 1º F vs 2º C (Mar 30 Jun 03:00)",
-    "Dieciseisavos 3: 1º C vs 2º F (Lun 29 Jun 19:00)",
-    "Dieciseisavos 4: 1º I vs 3º C/D/F/... (Mar 30 Jun 23:00)",
-    "Dieciseisavos 5: Alemania vs 3º A/B/C/D (Lun 29 Jun 22:30)",
-    "Dieciseisavos 6: 2º E vs 2º I (Mar 30 Jun 19:00)",
-    "Dieciseisavos 7: México vs 3º C/E/F/... (Mié 1 Jul 03:00)",
-    "Dieciseisavos 8: 1º L vs 3º E/H/I/J... (Mié 1 Jul 18:00)",
-    "Dieciseisavos 9: 1º G vs 3º A/E/H/... (Mié 1 Jul 22:00)",
-    "Dieciseisavos 10: Estados Unidos vs 3º B/E/F/I... (Jue 2 Jul 02:00)",
-    "Dieciseisavos 11: 1º H vs 2º J (Jue 2 Jul 21:00)",
-    "Dieciseisavos 12: 2º K vs 2º L (Vie 3 Jul 01:00)",
-    "Dieciseisavos 13: 1º B vs 3º E/F/G/I... (Vie 3 Jul 05:00)",
-    "Dieciseisavos 14: Argentina vs 2º H (Sáb 4 Jul 00:00)",
-    "Dieciseisavos 15: 2º D vs 2º G (Vie 3 Jul 20:00)",
-    "Dieciseisavos 16: 1º K vs 3º D/E/I/J... (Sáb 4 Jul 03:30)"
+    "Dieciseisavos 1: Alemania vs 3º (Lun 29 Jun 22:30)",
+    "Dieciseisavos 2: 1º Grupo I vs 3º (Mar 30 Jun 23:00)",
+    "Dieciseisavos 3: Sudáfrica vs Canadá (Dom 28 Jun 21:00)",
+    "Dieciseisavos 4: Países Bajos vs Marruecos (Mar 30 Jun 03:00)",
+    "Dieciseisavos 5: 2º Grupo K vs 2º Grupo L (Vie 3 Jul 01:00)",
+    "Dieciseisavos 6: 1º Grupo H vs 2º Grupo J (Jue 2 Jul 21:00)",
+    "Dieciseisavos 7: EEUU vs Bosnia y Herzegovina (Jue 2 Jul 02:00)",
+    "Dieciseisavos 8: 1º Grupo G vs 3º (Mié 1 Jul 22:00)",
+    "Dieciseisavos 9: Brasil vs Japón (Lun 29 Jun 19:00)",
+    "Dieciseisavos 10: Costa de Marfil vs 2º Grupo I (Mar 30 Jun 19:00)",
+    "Dieciseisavos 11: México vs 3º (Mié 1 Jul 03:00)",
+    "Dieciseisavos 12: 1º Grupo L vs 3º (Mié 1 Jul 18:00)",
+    "Dieciseisavos 13: Argentina vs 2º Grupo H (Sáb 4 Jul 00:00)",
+    "Dieciseisavos 14: Australia vs 2º Grupo G (Vie 3 Jul 20:00)",
+    "Dieciseisavos 15: Suiza vs 3º (Vie 3 Jul 05:00)",
+    "Dieciseisavos 16: 1º Grupo K vs 3º (Sáb 4 Jul 03:30)"
   ],
   r8: [
     "Octavos 1: G. Dieciseisavos 1 vs G. Dieciseisavos 2 (Sáb 4 Jul 19:00)",
@@ -1159,21 +1159,21 @@ function buildKnockoutSeedMatches() {
   const ms=[]; let vi=72;
   const KNOCKOUT_SCHEDULE = {
     'LAST_32': [
-      [17, 19, 0],  // Slot 0 (Dom 28 Jun 21:00)
-      [19, 1, 0],   // Slot 1 (Mar 30 Jun 03:00)
-      [18, 17, 0],  // Slot 2 (Lun 29 Jun 19:00)
-      [19, 21, 0],  // Slot 3 (Mar 30 Jun 23:00)
-      [18, 20, 30], // Slot 4 (Lun 29 Jun 22:30)
-      [19, 17, 0],  // Slot 5 (Mar 30 Jun 19:00)
-      [20, 1, 0],   // Slot 6 (Mié 1 Jul 03:00)
-      [20, 16, 0],  // Slot 7 (Mié 1 Jul 18:00)
-      [20, 20, 0],  // Slot 8 (Mié 1 Jul 22:00)
-      [21, 0, 0],   // Slot 9 (Jue 2 Jul 02:00)
-      [21, 19, 0],  // Slot 10 (Jue 2 Jul 21:00)
-      [21, 23, 0],  // Slot 11 (Vie 3 Jul 01:00)
-      [22, 3, 0],   // Slot 12 (Vie 3 Jul 05:00)
-      [22, 22, 0],  // Slot 13 (Sáb 4 Jul 00:00)
-      [22, 18, 0],  // Slot 14 (Vie 3 Jul 20:00)
+      [18, 20, 30], // Slot 0 (Lun 29 Jun 22:30)
+      [19, 21, 0],  // Slot 1 (Mar 30 Jun 23:00)
+      [17, 19, 0],  // Slot 2 (Dom 28 Jun 21:00)
+      [19, 1, 0],   // Slot 3 (Mar 30 Jun 03:00)
+      [21, 23, 0],  // Slot 4 (Vie 3 Jul 01:00)
+      [21, 19, 0],  // Slot 5 (Jue 2 Jul 21:00)
+      [21, 0, 0],   // Slot 6 (Jue 2 Jul 02:00)
+      [20, 20, 0],  // Slot 7 (Mié 1 Jul 22:00)
+      [18, 17, 0],  // Slot 8 (Lun 29 Jun 19:00)
+      [19, 17, 0],  // Slot 9 (Mar 30 Jun 19:00)
+      [20, 1, 0],   // Slot 10 (Mié 1 Jul 03:00)
+      [20, 16, 0],  // Slot 11 (Mié 1 Jul 18:00)
+      [22, 22, 0],  // Slot 12 (Sáb 4 Jul 00:00)
+      [22, 18, 0],  // Slot 13 (Vie 3 Jul 20:00)
+      [22, 3, 0],   // Slot 14 (Vie 3 Jul 05:00)
       [23, 1, 30]   // Slot 15 (Sáb 4 Jul 03:30)
     ],
     'LAST_16': [
@@ -1840,12 +1840,10 @@ function hideDraftTimeline() { const wrap=document.getElementById('draft-timelin
 
 // ── RENDER: RESULTADOS ─────────────────────────────────────
 function switchResTab(tab, btn) {
-  document.querySelectorAll('.res-tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); resTabActive=tab;
+  document.querySelectorAll('#page-resultados .res-tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); resTabActive=tab;
   document.getElementById('res-grupos-filters').style.display = tab==='grupos'?'flex':'none';
   document.getElementById('results-grid').style.display       = tab==='grupos'?'grid':'none';
-  document.getElementById('res-elim-wrap').style.display      = tab==='eliminatoria'?'block':'none';
   document.getElementById('res-todos-wrap').style.display     = tab==='todos'?'block':'none';
-  if(tab==='eliminatoria') renderBracket();
   if(tab==='todos') renderTodosMatches();
 }
 function getTeamMatches(t) { return matches.filter(m=>{const h=nameES(m.homeTeam?.name||''),a=nameES(m.awayTeam?.name||'');return h===t||a===t;}).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate)); }
@@ -1854,10 +1852,8 @@ function renderResults() {
   const banner=document.getElementById('res-admin-banner');
   if(banner) banner.innerHTML='';
   if(resTabActive==='todos'){renderTodosMatches();return;}
-  if(resTabActive==='eliminatoria'){renderBracket();return;}
   document.getElementById('res-grupos-filters').style.display='flex';
   document.getElementById('results-grid').style.display='grid';
-  document.getElementById('res-elim-wrap').style.display='none';
   document.getElementById('res-todos-wrap').style.display='none';
   const teams=ALL_TEAMS.filter(t=>{if(resFilter==='active')return teamGroupPts(t)+teamElimRaw(t)>0;if(resFilter==='mis')return myTeamSet.has(t);return true;}).filter(t=>t.toLowerCase().includes(resSearch.toLowerCase()));
   document.getElementById('results-grid').innerHTML=teams.map(t=>{
@@ -1913,8 +1909,17 @@ async function togResult(team, field) {
 function filterResults(v) { resSearch=v; renderResults(); }
 function filterChip(el, f) { document.querySelectorAll('#res-grupos-filters .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); resFilter=f; renderResults(); }
 
-// ── RENDER: GRUPOS ─────────────────────────────────────────
+// ── RENDER: GRUPOS & MUNDIAL ───────────────────────────────
+let mundialTabActive = 'grupos';
+function switchMundialTab(tab, btn) {
+  document.querySelectorAll('#page-grupos .res-tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); mundialTabActive=tab;
+  document.getElementById('grupos-wrap').style.display = tab==='grupos'?'grid':'none';
+  document.getElementById('mundial-elim-wrap').style.display = tab==='eliminatoria'?'block':'none';
+  if(tab==='eliminatoria') renderBracket();
+  if(tab==='grupos') renderGrupos();
+}
 function renderGrupos() {
+  if (mundialTabActive === 'eliminatoria') { renderBracket(); return; }
   const myTeams=getMyTeams();
   document.getElementById('grupos-wrap').innerHTML=Object.entries(GRUPOS_WC2026).map(([g,teams])=>{
     const sorted=[...teams].map(t=>{const r=results[t]||{};const pts=(r.pg||0)*3+(r.pe||0);const pj=(r.pg||0)+(r.pe||0)+(r.pd||0);return{t,pts,pj,pg:r.pg||0,pe:r.pe||0,pd:r.pd||0};}).sort((a,b)=>b.pts-a.pts);
