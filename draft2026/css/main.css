@@ -323,8 +323,9 @@ main { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:2r
 .bracket { display:flex; align-items:stretch; min-width:800px; }
 .bracket-round { display:flex; flex-direction:column; flex:1; padding:0 .4rem; }
 .bracket-round-title { font-family:'Bebas Neue'; font-size:.8rem; letter-spacing:2px; color:var(--gold); text-align:center; margin-bottom:.6rem; border-bottom:1px solid rgba(245,197,24,.2); padding-bottom:.3rem; flex-shrink:0; }
-.bracket-round-matches { display:flex; flex-direction:column; justify-content:space-around; flex:1; }
-.bracket-match { background:var(--surface); border:1px solid var(--border); border-radius:9px; margin:.25rem 0; overflow:hidden; flex-shrink:0; }
+.bracket-round-matches { display:flex; flex-direction:column; flex:1; }
+.bracket-slot { flex:1; display:flex; flex-direction:column; justify-content:center; }
+.bracket-match { background:var(--surface); border:1px solid var(--border); border-radius:9px; margin:.25rem 0; overflow:hidden; flex-shrink:0; width:100%; }
 .bracket-match-team { display:flex; align-items:center; gap:.35rem; padding:.3rem .55rem; font-family:'Barlow Condensed'; font-size:.75rem; font-weight:700; border-bottom:1px solid rgba(42,54,80,.3); }
 .bracket-match-team:last-child { border-bottom:none; }
 .bracket-match-team.winner { background:rgba(245,197,24,.08); color:var(--gold); }
